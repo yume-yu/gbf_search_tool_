@@ -1,18 +1,17 @@
-import toml
 import re
+
+import toml
 
 CONSUMER_KEY = ""
 CONSUMER_SECRET = ""
 ACCESS_TOKEN = ""
 ACCESS_TOKEN_SECRET = ""
 TWEET_LIMIT = 0
-
 GLOBAL_PARAMS = "global"
 STANDARD_SEARCH_API_TOKENS = "APIkeys"
+ID_EXTRACTION_PATTERN = re.compile(".*(?P<ID>[A-F0-9]{8}) :")
 
 configs = toml.load("./config.toml")
-
-ID_EXTRACTION_PATTERN = re.compile(".*(?P<ID>[A-F0-9]{8}) :")
 
 
 def setup():
@@ -36,7 +35,7 @@ def get_rescue_ID(tweet_text: str):
     try:
         found_id = re.match(ID_EXTRACTION_PATTERN, tweet_text).group("ID")
     except AttributeError:
-        return(False, None)
+        return (False, None)
     else:
         return (True, found_id)
 
