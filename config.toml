@@ -1,0 +1,6 @@
+[APIkeys]
+API_Key = "your apo key"
+API_Key_Secret = "your apo key secret"
+Accsess_Token = "your accsess token"
+Accsess_Token_Secret = "your accsess token secret"
+Tweet_limit = 100
