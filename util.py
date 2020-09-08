@@ -19,7 +19,7 @@ def setup():
     # 一般設定読み込み
     global TWEET_LIMIT
 
-    TWEET_LIMIT = configs.get(GLOBAL_PARAMS)
+    TWEET_LIMIT = configs.get(GLOBAL_PARAMS).get("Tweet_limit")
 
     # APIキーの設定読み込み
     global CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET
