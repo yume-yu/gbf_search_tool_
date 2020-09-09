@@ -20,8 +20,8 @@ def get_bosscategories():
 def get_bosslist_by_id(id: int):
     connection = sqlite3.connect(DBPATH)
     cursor = connection.cursor()
-    ids = (id,)
-    cursor.execute(GET_BOSSLIST_BY_ID,ids)
+    params = (id,)
+    cursor.execute(GET_BOSSLIST_BY_ID,params)
     res = cursor.fetchall()
     data = res
     bossdata_list = []
