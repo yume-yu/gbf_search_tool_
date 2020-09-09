@@ -10,8 +10,7 @@ def get_bosscategories():
     cursor = connection.cursor()
     cursor.execute(GET_BOSS_CATTEGORIRS)
 # 全件取得は cursor.fetchall()
-    res = cursor.fetchall()
-    data = res
+    data = cursor.fetchall()
     categories = []
     for category in data :
         categories.append({'id':category[0],'category_name':category[1]})
@@ -22,9 +21,11 @@ def get_bosslist_by_id(id: int):
     cursor = connection.cursor()
     params = (id,)
     cursor.execute(GET_BOSSLIST_BY_ID,params)
-    res = cursor.fetchall()
-    data = res
+    data = cursor.fetchall()
     bossdata_list = []
     for boss_list in data :
         bossdata_list.append({'id':boss_list[0],'boss_name':boss_list[1],'search_query':boss_list[2]})
     return bossdata_list
+
+if __name__ == "__main__":
+    print(get_bosslist_by_id(1))
