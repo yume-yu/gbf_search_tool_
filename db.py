@@ -1,16 +1,16 @@
 import sqlite3
 
 # データベースファイルのパス
-dbpath = 'gbf_search.sqlite'
-connection = sqlite3.connect(dbpath)
-cursor = connection.cursor()
+DBPATH = 'gbf_search.sqlite'
 GET_BOSS_CATTEGORIRS = 'SELECT * FROM boss_categories ORDER BY id ASC'
 GET_BOSSLIST_BY_ID = 'SELECT boss_name.id,boss_name.name,boss_name.search_query FROM boss_name LEFT OUTER JOIN boss_categories ON boss_name.category = boss_categories.id WHERE boss_categories.id = ?;'
 
 def get_bosscategories():
-    cursor.execute()
+    connection = sqlite3.connect(DBPATH)
+    cursor = connection.cursor()
+    cursor.execute(GET_BOSS_CATTEGORIRS)
 # 全件取得は cursor.fetchall()
-    res = cursor.fetchall(GET_BOSS_CATTEGORIRS)
+    res = cursor.fetchall()
     data = res
     categories = []
     for category in data :
@@ -18,6 +18,8 @@ def get_bosscategories():
     return categories
 
 def get_bosslist_by_id(id: int):
+    connection = sqlite3.connect(DBPATH)
+    cursor = connection.cursor()
     ids = (id,)
     cursor.execute(GET_BOSSLIST_BY_ID,ids)
     res = cursor.fetchall()
