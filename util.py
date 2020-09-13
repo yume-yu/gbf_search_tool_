@@ -15,6 +15,12 @@ SUPPORT_MULTIBYTE = None
 configs = toml.load("./config.toml")
 
 
+class Error(Exception):
+    """Base class for exceptions in this module."""
+
+    pass
+
+
 def setup():
     # 一般設定読み込み
     global TWEET_LIMIT, SUPPORT_MULTIBYTE
