@@ -58,6 +58,9 @@ class Tweet:
 
         params = {"count": TWEET_LIMIT, "q": keyword, "since_id": since_id}
 
+        if not self.session.authorized:
+            self.session = self.init_sesstion()
+
         req = self.session.get(self.SEARCH_API_URL, params=params)
 
         if req.status_code == 200:
