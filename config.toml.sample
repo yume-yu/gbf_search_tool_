@@ -1,5 +1,6 @@
 [global]
 Tweet_limit = 100
+Support_Muiltibyte = true
 
 [APIkeys]
 API_Key = "your apo key"

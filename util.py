@@ -10,15 +10,17 @@ TWEET_LIMIT = 0
 GLOBAL_PARAMS = "global"
 STANDARD_SEARCH_API_TOKENS = "APIkeys"
 ID_EXTRACTION_PATTERN = re.compile(".*(?P<ID>[A-F0-9]{8}) :")
+SUPPORT_MULTIBYTE = None
 
 configs = toml.load("./config.toml")
 
 
 def setup():
     # 一般設定読み込み
-    global TWEET_LIMIT
+    global TWEET_LIMIT, SUPPORT_MULTIBYTE
 
     TWEET_LIMIT = configs.get(GLOBAL_PARAMS).get("Tweet_limit")
+    SUPPORT_MULTIBYTE = configs.get(GLOBAL_PARAMS).get("Support_Muiltibyte")
 
     # APIキーの設定読み込み
     global CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET
@@ -40,4 +42,23 @@ def get_rescue_ID(tweet_text: str):
         return (True, found_id)
 
 
+def format_string_for_addstr(string4print: str):
+    if SUPPORT_MULTIBYTE:
+        return string4print
+    else:
+        return " ".join(list(string4print)) + " "
+
+
+def gbss_addstr(window, y, x, string, attr=0):
+    window.addstr(y, x, format_string_for_addstr(string), attr)
+
+
 setup()
+
+if __name__ == "__main__":
+    print(CONSUMER_KEY)
+    print(CONSUMER_SECRET)
+    print(ACCESS_TOKEN)
+    print(ACCESS_TOKEN_SECRET)
+    print(TWEET_LIMIT)
+    print(SUPPORT_MULTIBYTE)
