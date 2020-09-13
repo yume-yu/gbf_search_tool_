@@ -1,7 +1,22 @@
 import curses
-import db
 import locale
-locale.setlocale(locale.LC_ALL, '')
+
+import db
+
+locale.setlocale(locale.LC_ALL, "")
+
+SUPPORT_MULTIBYTE = False
+
+
+def format_string_for_addstr(string4print: str):
+    if SUPPORT_MULTIBYTE:
+        return string4print
+    else:
+         return " ".join(list(string4print)) + " "
+
+
+def gbss_addstr(window, y, x, string, attr=0):
+    window.addstr(y, x, format_string_for_addstr(string), attr)
 
 
 def main(stdscr):
@@ -38,55 +53,62 @@ def main(stdscr):
     while True:
         stdscr.addstr(1, int(x / 2) - 3, "title", curses.A_REVERSE)
         stdscr.refresh()
-        if(select_mode == 1):
+        if select_mode == 1:
             window.erase()
             for i, category in enumerate(categories):
                 maxnum = i
-                if(i == select):
-                    window.addstr((i * 2) + 1, 1, category["category_name"], curses.A_REVERSE)
+                if i == select:
+                    gbss_addstr(
+                        window,
+                        (i * 2) + 1,
+                        1,
+                        category["category_name"],
+                        curses.A_REVERSE,
+                    )
                 else:
-                    window.addstr((i * 2) + 1, 1, category["category_name"])
+                    gbss_addstr(window, (i * 2) + 1, 1, category["category_name"])
             inputkey = window.getkey()
-            if(inputkey == "KEY_UP"):
-                if(select > 0):
+            if inputkey == "KEY_UP":
+                if select > 0:
                     select = select - 1
                     window.refresh()
-            elif(inputkey == "KEY_DOWN"):
-                if(select < maxnum):
+            elif inputkey == "KEY_DOWN":
+                if select < maxnum:
                     select = select + 1
                     window.refresh()
-            elif(inputkey == "KEY_RIGHT"):
+            elif inputkey == "KEY_RIGHT":
                 select_mode = 2
                 select_boss = 0
                 window.refresh()
-        if(select_mode == 2):
+        if select_mode == 2:
             window2.erase()
-            bosslists = db.get_bosslist_by_id((select+1))
+            bosslists = db.get_bosslist_by_id((select + 1))
             for i, bosslist in enumerate(bosslists):
                 maxnum = i
-                if(i == select_boss):
-                    window2.addstr((i * 2) + 1, 1, bosslist["boss_name"],curses.A_REVERSE)
+                if i == select_boss:
+                    gbss_addstr(
+                        window2, (i * 2) + 1, 1, bosslist["boss_name"], curses.A_REVERSE
+                    )
                     window2.refresh()
                 else:
-                    window2.addstr((i * 2) + 1, 1, bosslist["boss_name"])
+                    gbss_addstr(window2, (i * 2) + 1, 1, bosslist["boss_name"])
                     window2.refresh()
             inputkey = window.getkey()
-            if(inputkey  == "KEY_UP"):
-                if(select_boss > 0):
+            if inputkey == "KEY_UP":
+                if select_boss > 0:
                     select_boss = select_boss - 1
                     window2.refresh()
-            elif(inputkey  == "KEY_DOWN"):
-                if(select_boss < maxnum):
+            elif inputkey == "KEY_DOWN":
+                if select_boss < maxnum:
                     select_boss = select_boss + 1
                     window2.refresh()
-            elif(inputkey == "KEY_LEFT"):
+            elif inputkey == "KEY_LEFT":
                 select_mode = 1
                 window2.erase()
                 window2.refresh()
-            elif(inputkey  == "KEY_RIGHT"):
+            elif inputkey == "KEY_RIGHT":
                 return bosslists[select_boss]
                 break
-
 
 
 if __name__ == "__main__":
