@@ -11,7 +11,6 @@ CANCEL = -1
 def main(stdscr):
     # 必要だから書く
     curses.start_color()
-    stdscr.keypad(True)
     # 色の設定
     curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_WHITE)
     curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLUE)
@@ -36,6 +35,7 @@ def main(stdscr):
     stdscr.addstr(1, int(x / 2) - 3, TITLE, curses.A_REVERSE)
     stdscr.refresh()
     while True:
+        window.keypad(True)
         selected = menu(window, categories, "category_name")
         if(selected == CANCEL):
             continue
@@ -43,7 +43,7 @@ def main(stdscr):
         selected = menu(window2, bosslists, "boss_name")
         if(selected == CANCEL):
             continue
-        print(bosslists[selected])
+        return(bosslists[selected])
 
 
 def menu(window, datas, tag):
