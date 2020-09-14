@@ -5,6 +5,7 @@ import db
 
 locale.setlocale(locale.LC_ALL, "")
 TITLE = "title"
+CANCEL = -1
 
 SUPPORT_MULTIBYTE = False
 
@@ -39,14 +40,19 @@ def main(stdscr):
     stdscr.addstr(1, int(x / 2) - 3, TITLE, curses.A_REVERSE)
     stdscr.refresh()
     while True:
-        selected = menu(window,categories,"category_name")
+        selected = menu(window, categories, "category_name")
+        if(selected == CANCEL):
+            return CANCEL
         bosslists = db.get_bosslist_by_id(selected)
-        selected = menu(window2,bosslists,"boss_name")
+        selected = menu(window2, bosslists, "boss_name")
+        if(selected == CANCEL):
+            continue
         print(bosslists[selected])
 
-def menu(window,datas,tag):
+
+def menu(window, datas, tag):
     selected = 0
-    maxnum = len(datas) -1
+    maxnum = len(datas) - 1
     while True:
         window.erase()
         for number, data in enumerate(datas):
@@ -60,10 +66,10 @@ def menu(window,datas,tag):
                 )
             else:
                 gbss_addstr(
-                window,
-                (number * 2) + 1,
-                1,
-                data[tag]
+                    window,
+                    (number * 2) + 1,
+                    1,
+                    data[tag]
                 )
         window.refresh()
         inputkey = window.getch()
@@ -76,7 +82,10 @@ def menu(window,datas,tag):
         elif inputkey == curses.KEY_RIGHT:
             return selected
         elif inputkey == curses.KEY_LEFT:
-            continue
+            window.erase()
+            window.refresh()
+            return CANCEL
+
+
 if __name__ == "__main__":
-    x = curses.wrapper(main)
-    print(x)
+    curses.wrapper(main)
