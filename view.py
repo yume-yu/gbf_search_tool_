@@ -4,6 +4,7 @@ from util import gbss_addstr
 import db
 
 locale.setlocale(locale.LC_ALL, "")
+TITLE = "title"
 
 SUPPORT_MULTIBYTE = False
 
@@ -39,22 +40,22 @@ def main(stdscr):
     #
     # キーが入力されたら終わる
     while True:
-        stdscr.addstr(1, int(x / 2) - 3, "title", curses.A_REVERSE)
+        stdscr.addstr(1, int(x / 2) - 3, TITLE, curses.A_REVERSE)
         stdscr.refresh()
         if select_mode == 1:
             window.erase()
-            for i, category in enumerate(categories):
-                maxnum = i
-                if i == select:
+            for category_count, category in enumerate(categories):
+                maxnum = category_count
+                if category_count == select:
                     gbss_addstr(
                         window,
-                        (i * 2) + 1,
+                        (category_count * 2) + 1,
                         1,
                         category["category_name"],
                         curses.A_REVERSE,
                     )
                 else:
-                    gbss_addstr(window, (i * 2) + 1, 1, category["category_name"])
+                    gbss_addstr(window, (category_count * 2) + 1, 1, category["category_name"])
             inputkey = window.getch()
             if inputkey == curses.KEY_UP:
                 if select > 0:
@@ -71,15 +72,15 @@ def main(stdscr):
         if select_mode == 2:
             window2.erase()
             bosslists = db.get_bosslist_by_id((select + 1))
-            for i, bosslist in enumerate(bosslists):
-                maxnum = i
-                if i == select_boss:
+            for boss_count, bosslist in enumerate(bosslists):
+                maxnum = boss_count
+                if boss_count == select_boss:
                     gbss_addstr(
-                        window2, (i * 2) + 1, 1, bosslist["boss_name"], curses.A_REVERSE
+                        window2, (boss_count * 2) + 1, 1, bosslist["boss_name"], curses.A_REVERSE
                     )
                     window2.refresh()
                 else:
-                    gbss_addstr(window2, (i * 2) + 1, 1, bosslist["boss_name"])
+                    gbss_addstr(window2, (boss_count * 2) + 1, 1, bosslist["boss_name"])
                     window2.refresh()
             inputkey = window.getch()
             if inputkey == curses.KEY_UP:
