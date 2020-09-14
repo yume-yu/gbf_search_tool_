@@ -9,8 +9,6 @@ CANCEL = -1
 
 
 def main(stdscr):
-    select = 0
-    select_mode = 1
     # 必要だから書く
     curses.start_color()
     stdscr.keypad(True)
