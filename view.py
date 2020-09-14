@@ -7,8 +7,6 @@ locale.setlocale(locale.LC_ALL, "")
 TITLE = "title"
 CANCEL = -1
 
-SUPPORT_MULTIBYTE = False
-
 
 def main(stdscr):
     select = 0
