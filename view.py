@@ -8,6 +8,7 @@ TITLE = "title"
 
 SUPPORT_MULTIBYTE = False
 
+
 def main(stdscr):
     select = 0
     select_mode = 1
@@ -35,71 +36,47 @@ def main(stdscr):
     window2.border()
 
     categories = db.get_bosscategories()
-    # 背景の設計
-    # 文字の配置
-    #
-    # キーが入力されたら終わる
+    stdscr.addstr(1, int(x / 2) - 3, TITLE, curses.A_REVERSE)
+    stdscr.refresh()
     while True:
-        stdscr.addstr(1, int(x / 2) - 3, TITLE, curses.A_REVERSE)
-        stdscr.refresh()
-        if select_mode == 1:
-            window.erase()
-            for category_count, category in enumerate(categories):
-                maxnum = category_count
-                if category_count == select:
-                    gbss_addstr(
-                        window,
-                        (category_count * 2) + 1,
-                        1,
-                        category["category_name"],
-                        curses.A_REVERSE,
-                    )
-                else:
-                    gbss_addstr(window, (category_count * 2) + 1, 1, category["category_name"])
-            inputkey = window.getch()
-            if inputkey == curses.KEY_UP:
-                if select > 0:
-                    select = select - 1
-                    window.refresh()
-            elif inputkey == curses.KEY_DOWN:
-                if select < maxnum:
-                    select = select + 1
-                    window.refresh()
-            elif inputkey == curses.KEY_RIGHT:
-                select_mode = 2
-                select_boss = 0
-                window.refresh()
-        if select_mode == 2:
-            window2.erase()
-            bosslists = db.get_bosslist_by_id((select + 1))
-            for boss_count, bosslist in enumerate(bosslists):
-                maxnum = boss_count
-                if boss_count == select_boss:
-                    gbss_addstr(
-                        window2, (boss_count * 2) + 1, 1, bosslist["boss_name"], curses.A_REVERSE
-                    )
-                    window2.refresh()
-                else:
-                    gbss_addstr(window2, (boss_count * 2) + 1, 1, bosslist["boss_name"])
-                    window2.refresh()
-            inputkey = window.getch()
-            if inputkey == curses.KEY_UP:
-                if select_boss > 0:
-                    select_boss = select_boss - 1
-                    window2.refresh()
-            elif inputkey == curses.KEY_DOWN:
-                if select_boss < maxnum:
-                    select_boss = select_boss + 1
-                    window2.refresh()
-            elif inputkey == curses.KEY_LEFT:
-                select_mode = 1
-                window2.erase()
-                window2.refresh()
-            elif inputkey == curses.KEY_RIGHT:
-                return bosslists[select_boss]
-                break
+        selected = menu(window,categories,"category_name")
+        bosslists = db.get_bosslist_by_id(selected)
+        selected = menu(window2,bosslists,"boss_name")
+        print(bosslists[selected])
 
-
+def menu(window,datas,tag):
+    selected = 0
+    maxnum = len(datas) -1
+    while True:
+        window.erase()
+        for number, data in enumerate(datas):
+            if selected == number:
+                gbss_addstr(
+                    window,
+                    (number * 2) + 1,
+                    1,
+                    data[tag],
+                    curses.A_REVERSE,
+                )
+            else:
+                gbss_addstr(
+                window,
+                (number * 2) + 1,
+                1,
+                data[tag]
+                )
+        window.refresh()
+        inputkey = window.getch()
+        if inputkey == curses.KEY_UP:
+            if selected > 0:
+                selected = selected - 1
+        elif inputkey == curses.KEY_DOWN:
+            if selected < maxnum:
+                selected = selected + 1
+        elif inputkey == curses.KEY_RIGHT:
+            return selected
+        elif inputkey == curses.KEY_LEFT:
+            continue
 if __name__ == "__main__":
     x = curses.wrapper(main)
     print(x)
