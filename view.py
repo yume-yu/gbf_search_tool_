@@ -56,15 +56,15 @@ def main(stdscr):
                 else:
                     gbss_addstr(window, (i * 2) + 1, 1, category["category_name"])
             inputkey = window.getkey()
-            if inputkey == "KEY_UP":
+            if inputkey == curses.KEY_UP:
                 if select > 0:
                     select = select - 1
                     window.refresh()
-            elif inputkey == "KEY_DOWN":
+            elif inputkey == curses.KEY_DOWN:
                 if select < maxnum:
                     select = select + 1
                     window.refresh()
-            elif inputkey == "KEY_RIGHT":
+            elif inputkey == curses.KEY_RIGHT:
                 select_mode = 2
                 select_boss = 0
                 window.refresh()
@@ -82,19 +82,19 @@ def main(stdscr):
                     gbss_addstr(window2, (i * 2) + 1, 1, bosslist["boss_name"])
                     window2.refresh()
             inputkey = window.getkey()
-            if inputkey == "KEY_UP":
+            if inputkey == curses.KEY_UP:
                 if select_boss > 0:
                     select_boss = select_boss - 1
                     window2.refresh()
-            elif inputkey == "KEY_DOWN":
+            elif inputkey == curses.KEY_DOWN:
                 if select_boss < maxnum:
                     select_boss = select_boss + 1
                     window2.refresh()
-            elif inputkey == "KEY_LEFT":
+            elif inputkey == curses.KEY_LEFT:
                 select_mode = 1
                 window2.erase()
                 window2.refresh()
-            elif inputkey == "KEY_RIGHT":
+            elif inputkey == curses.KEY_RIGHT:
                 return bosslists[select_boss]
                 break
 
