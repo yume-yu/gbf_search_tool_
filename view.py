@@ -6,6 +6,7 @@ import db
 locale.setlocale(locale.LC_ALL, "")
 TITLE = "title"
 CANCEL = -1
+HOWTO ="↑↓:up&down →:ENTER ←:CANCEL"
 
 
 def main(stdscr):
@@ -33,6 +34,7 @@ def main(stdscr):
 
     categories = db.get_bosscategories()
     stdscr.addstr(1, int(x / 2) - 3, TITLE, curses.A_REVERSE)
+    stdscr.addstr(int(y-1), int(x / 2) - 10, HOWTO, curses.A_REVERSE)
     stdscr.refresh()
     while True:
         selected = menu(window, categories, "category_name")
