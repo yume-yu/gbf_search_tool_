@@ -42,7 +42,7 @@ def main(stdscr):
     while True:
         selected = menu(window, categories, "category_name")
         if(selected == CANCEL):
-            return CANCEL
+            continue
         bosslists = db.get_bosslist_by_id(selected)
         selected = menu(window2, bosslists, "boss_name")
         if(selected == CANCEL):
