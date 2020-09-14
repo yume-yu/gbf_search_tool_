@@ -35,7 +35,6 @@ def main(stdscr):
     stdscr.addstr(1, int(x / 2) - 3, TITLE, curses.A_REVERSE)
     stdscr.refresh()
     while True:
-        window.keypad(True)
         selected = menu(window, categories, "category_name")
         if(selected == CANCEL):
             continue
@@ -47,6 +46,7 @@ def main(stdscr):
 
 
 def menu(window, datas, tag):
+    window.keypad(True)
     selected = 0
     maxnum = len(datas) - 1
     while True:
