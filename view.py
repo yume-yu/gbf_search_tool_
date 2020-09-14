@@ -55,7 +55,7 @@ def main(stdscr):
                     )
                 else:
                     gbss_addstr(window, (i * 2) + 1, 1, category["category_name"])
-            inputkey = window.getkey()
+            inputkey = window.getch()
             if inputkey == curses.KEY_UP:
                 if select > 0:
                     select = select - 1
@@ -81,7 +81,7 @@ def main(stdscr):
                 else:
                     gbss_addstr(window2, (i * 2) + 1, 1, bosslist["boss_name"])
                     window2.refresh()
-            inputkey = window.getkey()
+            inputkey = window.getch()
             if inputkey == curses.KEY_UP:
                 if select_boss > 0:
                     select_boss = select_boss - 1
