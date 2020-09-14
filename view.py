@@ -1,23 +1,11 @@
 import curses
 import locale
-
+from util import gbss_addstr
 import db
 
 locale.setlocale(locale.LC_ALL, "")
 
 SUPPORT_MULTIBYTE = False
-
-
-def format_string_for_addstr(string4print: str):
-    if SUPPORT_MULTIBYTE:
-        return string4print
-    else:
-         return " ".join(list(string4print)) + " "
-
-
-def gbss_addstr(window, y, x, string, attr=0):
-    window.addstr(y, x, format_string_for_addstr(string), attr)
-
 
 def main(stdscr):
     select = 0
