@@ -9,7 +9,7 @@ CANCEL = -1
 HOWTO ="↑↓:up&down →:ENTER ←:CANCEL"
 
 
-def main(stdscr):
+def boss_select_menu(stdscr):
     # 必要だから書く
     curses.start_color()
     # 色の設定
@@ -83,7 +83,3 @@ def menu(window, datas, tag):
             window.erase()
             window.refresh()
             return CANCEL
-
-
-if __name__ == "__main__":
-    curses.wrapper(main)
