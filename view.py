@@ -1,15 +1,27 @@
 import curses
 import locale
-from util import gbss_addstr
+
 import db
+from util import gbss_addstr
 
 locale.setlocale(locale.LC_ALL, "")
-TITLE = "title"
 CANCEL = -1
-HOWTO ="↑↓:up&down →:ENTER ←:CANCEL"
+TITLE = "title"
+HOWTOCONTROL_TEXT = "↑↓:up&down →:ENTER ←:CANCEL"
 
 
-def boss_select_menu(stdscr):
+def boss_select_menu(stdscr: curses.Window):
+    """boss_select_menu
+
+    検索する救援の対象のボスの選択をcursesを使ってユーザーに求める
+
+    Args:
+        stdscr: curses.Windowクラスのオブジェクト
+    Returns:
+        dict: 選択したbossの情報 {'id': 0, 'boss_name': 'name', 'search_query': 'keyword'}
+    Examples:
+        user_selected_boss = curse.wrapper(boss_select_menu)
+    """
     # 必要だから書く
     curses.start_color()
     # 色の設定
@@ -34,20 +46,31 @@ def boss_select_menu(stdscr):
 
     categories = db.get_bosscategories()
     stdscr.addstr(1, int(x / 2) - 3, TITLE, curses.A_REVERSE)
-    stdscr.addstr(int(y-1), int(x / 2) - 10, HOWTO, curses.A_REVERSE)
+    stdscr.addstr(int(y - 1), int(x / 2) - 10, HOWTOCONTROL_TEXT, curses.A_REVERSE)
     stdscr.refresh()
     while True:
         selected = menu(window, categories, "category_name")
-        if(selected == CANCEL):
+        if selected == CANCEL:
             continue
         bosslists = db.get_bosslist_by_id(selected)
         selected = menu(window2, bosslists, "boss_name")
-        if(selected == CANCEL):
+        if selected == CANCEL:
             continue
-        return(bosslists[selected])
+        return bosslists[selected]
 
 
-def menu(window, datas, tag):
+def menu(window: curses.Window, datas: list, tag: str):
+    """menu
+
+    cursesを使って引数のリストを表示してユーザーに選択を促す。
+
+    Args:
+        window: リストを表示/操作するcurses.Windowクラス
+        datas: 列挙する内容1つづつをdictとして保持したリスト
+        tag: datasのデータ1つの中で、表示する内容のkey
+    Returns:
+        int: ユーザーがリストの何番目を選択したのか値
+    """
     window.keypad(True)
     selected = 0
     maxnum = len(datas) - 1
@@ -55,20 +78,9 @@ def menu(window, datas, tag):
         window.erase()
         for number, data in enumerate(datas):
             if selected == number:
-                gbss_addstr(
-                    window,
-                    (number * 2) + 1,
-                    1,
-                    data[tag],
-                    curses.A_REVERSE,
-                )
+                gbss_addstr(window, (number * 2) + 1, 1, data[tag], curses.A_REVERSE)
             else:
-                gbss_addstr(
-                    window,
-                    (number * 2) + 1,
-                    1,
-                    data[tag]
-                )
+                gbss_addstr(window, (number * 2) + 1, 1, data[tag])
         window.refresh()
         inputkey = window.getch()
         if inputkey == curses.KEY_UP:
@@ -83,3 +95,7 @@ def menu(window, datas, tag):
             window.erase()
             window.refresh()
             return CANCEL
+
+
+if __name__ == "__main__":
+    print(curses.wrapper(boss_select_menu))
