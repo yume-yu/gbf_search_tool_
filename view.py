@@ -52,7 +52,7 @@ def boss_select_menu(stdscr: curses.window):
         selected = menu(window, categories, "category_name")
         if selected == CANCEL:
             continue
-        bosslists = db.get_bosslist_by_id(selected)
+        bosslists = db.get_bosslist_by_id(selected + 1)
         selected = menu(window2, bosslists, "boss_name")
         if selected == CANCEL:
             continue
