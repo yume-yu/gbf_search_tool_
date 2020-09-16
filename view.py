@@ -10,7 +10,7 @@ TITLE = "title"
 HOWTOCONTROL_TEXT = "↑↓:up&down →:ENTER ←:CANCEL"
 
 
-def boss_select_menu(stdscr: curses.Window):
+def boss_select_menu(stdscr: curses.window):
     """boss_select_menu
 
     検索する救援の対象のボスの選択をcursesを使ってユーザーに求める
@@ -59,7 +59,7 @@ def boss_select_menu(stdscr: curses.Window):
         return bosslists[selected]
 
 
-def menu(window: curses.Window, datas: list, tag: str):
+def menu(window: curses.window, datas: list, tag: str):
     """menu
 
     cursesを使って引数のリストを表示してユーザーに選択を促す。
