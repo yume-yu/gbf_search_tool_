@@ -1,6 +1,7 @@
 """
 tweet取得からIDコピまでの処理を行なうThread拡張クラスを定義する
 """
+import datetime as dt
 import time
 from threading import Thread
 
@@ -16,6 +17,8 @@ class Check_tweet(Thread):
     tweet取得からIDコピーまでの処理を停止されるまで行なうThread拡張クラス
 
     Attributes:
+        TWEET_DATETIME_FORMAT (str): Tweet情報に含まれる投稿時間をdatetimeにパースするためのフォーマット
+        JST (dt.timezone): "Asia/Tokyo"のタイムゾーンオブジェクト
         running_flag (bool): threadの無限ループを維持するかのflag.Falseになるとループが止まりThreadが止まる
         interval (int): 救援IDの取得完了から次のtweet取得開始までのインターバル
         tweet (tweet.Tweet): Twitterのツイート取得オブジェクト
@@ -23,12 +26,16 @@ class Check_tweet(Thread):
         since_id (str): Tweet検索の際に基準にするTweetのid
     """
 
+    TWEET_DATETIME_FORMAT = "%a %b %d %H:%M:%S %z %Y"
+    JST = dt.timezone(dt.timedelta(hours=9))
+
     def __init__(self, search_query):
         """
         Args:
             search_query(str): tweet検索に使う文字列
         """
         super().__init__()
+        self.daemon = True
         self.running_flag = True
         self.interval = DEFAULT_INTERVAL
         self.tweet = tm.Tweet()
@@ -77,9 +84,11 @@ class Check_tweet(Thread):
         battle_id = None
         for tweet in tweets:
             _, battle_id = get_rescue_ID(tweet.get("text"))
-            tweet_date = tweet.get("created_at")
-            if log_battle_id(battle_id, tweet_date):
-                self.since_id = tweet.get("id")
+            tweet_date = dt.datetime.strptime(
+                tweet.get("created_at"), self.TWEET_DATETIME_FORMAT
+            ).astimezone(self.JST)
+            if log_battle_id(battle_id, tweet_date.isoformat()):
+                self.since_id = str(tweet.get("id"))
                 pyperclip.copy(battle_id)
                 break
 
