@@ -56,7 +56,12 @@ class Tweet:
 
         """
 
-        params = {"count": TWEET_LIMIT, "q": keyword, "since_id": since_id}
+        params = {
+            "count": TWEET_LIMIT,
+            "q": keyword,
+            "since_id": since_id,
+            "result_type": "recent",
+        }
 
         if not self.session.authorized:
             self.session = self.init_sesstion()
