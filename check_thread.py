@@ -1,6 +1,9 @@
 """
 tweet取得からIDコピまでの処理を行なうThread拡張クラスを定義する
+Attributes:
+    JST (dt.timezone): "Asia/Tokyo"のタイムゾーンオブジェクト
 """
+import curses
 import datetime as dt
 import time
 from threading import Thread
@@ -9,7 +12,9 @@ import pyperclip
 
 import tweet as tm
 from db import clear_logged_battle_id, log_battle_id
-from util import DEFAULT_INTERVAL, get_rescue_ID
+from util import DEFAULT_INTERVAL, TWEET_ID_BUFFER, get_rescue_ID
+
+JST = dt.timezone(dt.timedelta(hours=9))
 
 
 class Check_tweet(Thread):
@@ -18,7 +23,6 @@ class Check_tweet(Thread):
 
     Attributes:
         TWEET_DATETIME_FORMAT (str): Tweet情報に含まれる投稿時間をdatetimeにパースするためのフォーマット
-        JST (dt.timezone): "Asia/Tokyo"のタイムゾーンオブジェクト
         running_flag (bool): threadの無限ループを維持するかのflag.Falseになるとループが止まりThreadが止まる
         interval (int): 救援IDの取得完了から次のtweet取得開始までのインターバル
         tweet (tweet.Tweet): Twitterのツイート取得オブジェクト
@@ -27,9 +31,8 @@ class Check_tweet(Thread):
     """
 
     TWEET_DATETIME_FORMAT = "%a %b %d %H:%M:%S %z %Y"
-    JST = dt.timezone(dt.timedelta(hours=9))
 
-    def __init__(self, search_query):
+    def __init__(self, search_query, monitor: curses.window = None):
         """
         Args:
             search_query(str): tweet検索に使う文字列
@@ -40,7 +43,11 @@ class Check_tweet(Thread):
         self.interval = DEFAULT_INTERVAL
         self.tweet = tm.Tweet()
         self.search_query = search_query
+        self.status_monitor = monitor
         self.since_id = "0"
+        self.last_tweet_create_at = dt.datetime.now().astimezone(JST) - dt.timedelta(
+            minutes=1
+        )
         clear_logged_battle_id()
 
     def run(self):
@@ -57,7 +64,23 @@ class Check_tweet(Thread):
 
         このスレッドを停止する。
         """
+        self.status_monitor.stop()
         self.running_flag = False
+
+    def update_monitor(self, **status):
+        """update_monitor
+
+        ステータス表示を更新する
+
+        Args:
+            newid (str): 今回取得した救援ID
+            date (dt.datetime): 対象のツイートが投稿された時間
+            status_code (int): エラー時のHTTPStatusCode
+        """
+        status_monitor = Check_tweet_status_monitor(
+            status_window=self.status_monitor, **status
+        )
+        status_monitor.start()
 
     def update_interval(self, seconds: float):
         """update_interval
@@ -80,17 +103,63 @@ class Check_tweet(Thread):
 
         ツイートを検索して、重複のないツイートが見つかったらクリップボードへ挿入する
         """
-        tweets = self.tweet.search_tweet(self.search_query, self.since_id)
-        battle_id = None
-        for tweet in tweets:
-            _, battle_id = get_rescue_ID(tweet.get("text"))
-            tweet_date = dt.datetime.strptime(
-                tweet.get("created_at"), self.TWEET_DATETIME_FORMAT
-            ).astimezone(self.JST)
-            if log_battle_id(battle_id, tweet_date.isoformat()):
-                self.since_id = str(tweet.get("id"))
-                pyperclip.copy(battle_id)
-                break
+        try:
+            tweets = self.tweet.search_tweet(self.search_query, self.since_id)
+            battle_id = None
+            for tweet in tweets:
+                _, battle_id = get_rescue_ID(tweet.get("text"))
+                tweet_date = dt.datetime.strptime(
+                    tweet.get("created_at"), self.TWEET_DATETIME_FORMAT
+                ).astimezone(JST)
+                if log_battle_id(battle_id, tweet_date.isoformat()):
+                    # IDのみの指定だと取得漏れが発生しやすくなるので取得開始位置にバッファをもたせる
+                    self.since_id = str(tweet.get("id") - TWEET_ID_BUFFER)
+                    pyperclip.copy(battle_id)
+                    self.update_monitor(newid=battle_id, date=tweet_date)
+                    break
+        except tm.RequestFaildError as faild:
+            self.update_monitor(status_code=faild.status_code)
+
+
+class Check_tweet_status_monitor(Thread):
+    """
+    Check_tweetスレッドの状態/情報表示を行なうスレッド
+    """
+
+    def __init__(self, status_window: curses.window = None, **status):
+        super().__init__()
+        self.daemon = True
+        self.running_flag = True
+        self.api_status = True
+        self.monitor = status_window
+        self.status = status
+        self.status_updated_flag = True
+
+    def run(self):
+        self.update_monitor()
+
+    def update_monitor(self):
+        if self.monitor:
+            pass
+        else:
+            self.print_status()
+
+    def update_status_window(self):
+        pass
+
+    def print_status(self):
+        if self.status.get("status_code"):
+            print("API status: NG ({})".format(self.status.get("status_code")))
+        elif self.status.get("newid"):
+            print("API status: OK")
+            print("ID: {}".format(self.status.get("newid")))
+            print(
+                "delay: {}".format(
+                    dt.datetime.now().astimezone(JST) - self.status.get("date")
+                )
+            )
+        print("last update: {}".format(dt.datetime.now().astimezone(JST)))
+        print("------------------------------------------")
 
 
 if __name__ == "__main__":
@@ -100,5 +169,4 @@ if __name__ == "__main__":
     ct = Check_tweet(str_q)
     ct.start()
     while True:
-        print("yes")
-        time.sleep(2)
+        time.sleep(1000000)
