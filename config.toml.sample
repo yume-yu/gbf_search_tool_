@@ -1,6 +1,8 @@
 [global]
 Tweet_limit = 100
+Tweet_id_buffer = 100
 Support_Muiltibyte = true
+Default_interval = 5
 
 [APIkeys]
 API_Key = "your apo key"
