@@ -2,15 +2,11 @@ import curses
 import locale
 
 import db
-from util import gbss_addstr
+from util import (BOTTOM_PART_HEIGHT, MAIN_WIN_HEIGHT, MAIN_WIN_WIDTH,
+                  MIDDLE_PART_HEIGHT, TOP_PART_HEIGHT, gbss_addstr)
 
 locale.setlocale(locale.LC_ALL, "")
 
-MAIN_WIN_WIDTH = 80
-TOP_PART_HEIGHT = 4
-MIDDLE_PART_HEIGHT = 11
-BOTTOM_PART_HEIGHT = 4
-MAIN_WIN_HEIGHT = TOP_PART_HEIGHT + MIDDLE_PART_HEIGHT + BOTTOM_PART_HEIGHT
 
 CANCEL = -1
 TITLE = "Select Search Target"

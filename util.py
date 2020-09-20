@@ -2,6 +2,7 @@ import re
 
 import toml
 
+# tweet取得系定数
 CONSUMER_KEY = ""
 CONSUMER_SECRET = ""
 ACCESS_TOKEN = ""
@@ -13,6 +14,13 @@ TWEET_ID_BUFFER = 0
 GLOBAL_PARAMS = "global"
 STANDARD_SEARCH_API_TOKENS = "APIkeys"
 ID_EXTRACTION_PATTERN = re.compile(".*(?P<ID>[A-F0-9]{8}) :")
+
+# 表示系定数
+MAIN_WIN_WIDTH = 80
+TOP_PART_HEIGHT = 4
+MIDDLE_PART_HEIGHT = 11
+BOTTOM_PART_HEIGHT = 4
+MAIN_WIN_HEIGHT = TOP_PART_HEIGHT + MIDDLE_PART_HEIGHT + BOTTOM_PART_HEIGHT
 
 configs = toml.load("./config.toml")
 
