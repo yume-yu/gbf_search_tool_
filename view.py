@@ -134,7 +134,7 @@ def scrolled_menu(window: curses.window, datas: list, tag: str):
     height, width = window.getmaxyx()
     window.scrollok(True)
     window.idlok(True)
-    window.setscrreg(1, height - 1)
+    # window.setscrreg(1, height - 1)
     top = 0
     bottom = height - 2
     label_offset = 4
