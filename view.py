@@ -77,42 +77,75 @@ def boss_select_menu(stdscr: curses.window):
         return bosslists[selected]
 
 
-def menu(window: curses.window, datas: list, tag: str):
-    """menu
+def update_printed_lebels(
+    window: curses.window,
+    width: int,
+    datas: list,
+    maxnum: int,
+    tag: str,
+    top: int,
+    bottom: int,
+    selected: int,
+    diff: int,
+):
+    """print_lebels
 
-    cursesを使って引数のリストを表示してユーザーに選択を促す。
-
+    ウィンドウに選択肢を出力する
     Args:
-        window: リストを表示/操作するcurses.Windowクラス
-        datas: 列挙する内容1つづつをdictとして保持したリスト
-        tag: datasのデータ1つの中で、表示する内容のkey
+        window(curses.window): リストを表示/操作するcurses.windowクラス
+        datas(list): 列挙する内容1つづつをdictとして保持したリスト
+        tag(str): datasのデータ1つの中で、表示する内容のkey
+        top(int): ウィンドウの一番上に表示されている行
+        bottom(int): ウィンドウの一番下に表示されている行
+        selected(int): 現在ユーザーに選択されている行
     Returns:
-        int: ユーザーがリストの何番目を選択したのか値
+        tuple: (top, bottom, selected) 更新されたステータス
     """
-    window.keypad(True)
-    selected = 0
-    maxnum = len(datas) - 1
-    while True:
-        window.erase()
-        for number, data in enumerate(datas):
-            if selected == number:
-                gbss_addstr(window, (number * 2) + 1, 1, data[tag], curses.A_REVERSE)
-            else:
-                gbss_addstr(window, (number * 2) + 1, 1, data[tag])
-        window.refresh()
-        inputkey = window.getch()
-        if inputkey == curses.KEY_UP:
-            if selected > 0:
-                selected = selected - 1
-        elif inputkey == curses.KEY_DOWN:
-            if selected < maxnum:
-                selected = selected + 1
-        elif inputkey == curses.KEY_RIGHT:
-            return selected
-        elif inputkey == curses.KEY_LEFT:
-            window.erase()
-            window.refresh()
-            return CANCEL
+    label_offset = 4
+
+    # 現在の選択行の表示をリセット
+    window.addstr(selected - top + 1, 1, "".join([" " for index in range(width - 2)]))
+    gbss_addstr(window, selected - top + 1, label_offset, datas[selected].get(tag))
+
+    # スクロールが必要なときはスクロール
+    if diff < 0 and selected > 0:
+        selected = selected - 1
+        if top > selected:
+            top = top - 1
+            bottom = bottom - 1
+            window.scroll(diff)
+            window.border()
+    elif diff > 0 and selected < maxnum:
+        selected = selected + 1
+        if bottom <= selected:
+            top = top + 1
+            bottom = bottom + 1
+            window.scroll(diff)
+            window.border()
+
+    # 新たに選択された行を出力
+    window.addstr(selected - top + 1, 1, "".join([" " for index in range(width - 2)]))
+    window.addstr(
+        selected - top + 1,
+        label_offset,
+        "".join([" " for index in range(width - 2 - label_offset)]),
+        curses.A_REVERSE,
+    )
+    gbss_addstr(
+        window,
+        selected - top + 1,
+        label_offset - 1,
+        datas[selected].get(tag),
+        curses.A_REVERSE,
+    )
+
+    # 上下に表示されていないアイテムが有るときは矢印を表示
+    if bottom < maxnum + 1:
+        gbss_addstr(window, bottom - top, 1, "↓")
+    if top > 0:
+        gbss_addstr(window, 1, 1, "↑")
+    window.refresh()
+    return (top, bottom, selected)
 
 
 def scrolled_menu(window: curses.window, datas: list, tag: str):
@@ -134,7 +167,6 @@ def scrolled_menu(window: curses.window, datas: list, tag: str):
     height, width = window.getmaxyx()
     window.scrollok(True)
     window.idlok(True)
-    # window.setscrreg(1, height - 1)
     top = 0
     bottom = height - 2
     label_offset = 4
@@ -162,81 +194,17 @@ def scrolled_menu(window: curses.window, datas: list, tag: str):
 
     if bottom < len(datas):
         gbss_addstr(window, bottom - top, 1, "↓")
-    if top > 0:
-        gbss_addstr(window, top + 1, 1, "↑")
 
     while True:
         inputkey = window.getch()
         if inputkey == curses.KEY_UP:
-            if selected > 0:
-                window.addstr(
-                    selected - top + 1, 1, "".join([" " for index in range(width - 2)])
-                )
-                gbss_addstr(
-                    window, selected - top + 1, label_offset, datas[selected].get(tag)
-                )
-                selected = selected - 1
-                if top > selected:
-                    top = top - 1
-                    bottom = bottom - 1
-                    window.scroll(-1)
-                    window.border()
-                window.addstr(
-                    selected - top + 1, 1, "".join([" " for index in range(width - 2)])
-                )
-                window.addstr(
-                    selected - top + 1,
-                    label_offset,
-                    "".join([" " for index in range(width - 2 - label_offset)]),
-                    curses.A_REVERSE,
-                )
-                gbss_addstr(
-                    window,
-                    selected - top + 1,
-                    label_offset - 1,
-                    datas[selected].get(tag),
-                    curses.A_REVERSE,
-                )
-                if bottom < maxnum + 1:
-                    gbss_addstr(window, bottom - top, 1, "↓")
-                if top > 0:
-                    gbss_addstr(window, 1, 1, "↑")
-                window.refresh()
+            top, bottom, selected = update_printed_lebels(
+                window, width, datas, maxnum, tag, top, bottom, selected, -1
+            )
         elif inputkey == curses.KEY_DOWN:
-            if selected < maxnum:
-                window.addstr(
-                    selected - top + 1, 1, "".join([" " for index in range(width - 2)])
-                )
-                gbss_addstr(
-                    window, selected - top + 1, label_offset, datas[selected].get(tag)
-                )
-                selected = selected + 1
-                if bottom <= selected:
-                    top = top + 1
-                    bottom = bottom + 1
-                    window.scroll(1)
-                    window.border()
-                window.addstr(
-                    selected - top + 1, 1, "".join([" " for index in range(width - 2)])
-                )
-                window.addstr(
-                    selected - top + 1,
-                    label_offset,
-                    "".join([" " for index in range(width - 2 - label_offset)]),
-                    curses.A_REVERSE,
-                )
-                gbss_addstr(
-                    window,
-                    selected - top + 1,
-                    label_offset - 1,
-                    datas[selected].get(tag),
-                    curses.A_REVERSE,
-                )
-                if bottom < maxnum + 1:
-                    gbss_addstr(window, bottom - top, 1, "↓")
-                if top > 0:
-                    gbss_addstr(window, 1, 1, "↑")
-                window.refresh()
+            top, bottom, selected = update_printed_lebels(
+                window, width, datas, maxnum, tag, top, bottom, selected, 1
+            )
         elif inputkey == curses.KEY_RIGHT:
             return selected
         elif inputkey == curses.KEY_LEFT:
