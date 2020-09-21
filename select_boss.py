@@ -5,7 +5,7 @@ import db
 from util import (BOTTOM_PART_HEIGHT, MAIN_WIN_HEIGHT, MAIN_WIN_WIDTH,
                   MIDDLE_PART_HEIGHT, TOP_PART_HEIGHT, gbss_addstr)
 
-locale.setlocale(locale.LC_ALL, "")
+# locale.setlocale(locale.LC_ALL, "")
 
 
 CANCEL = -1
@@ -27,12 +27,6 @@ def boss_select_menu(stdscr: curses.window):
     Examples:
         user_selected_boss = curse.wrapper(boss_select_menu)
     """
-    # 必要だから書く
-    curses.start_color()
-    # 色の設定
-    curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
-    curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
-    curses.init_pair(3, curses.COLOR_RED, curses.COLOR_BLACK)
     # バックグラウンド設定
     stdscr.bkgd(" ", curses.color_pair(1) | curses.A_BOLD)
     # 画面のマックスサイズをタプルで取得
@@ -49,9 +43,9 @@ def boss_select_menu(stdscr: curses.window):
         int(MAIN_WIN_WIDTH / 2),
     )
     # window2の背景の設定
-    window.bkgd(" ", curses.color_pair(2))
+    window.bkgd(" ", curses.color_pair(1))
     # window1の背景の設定
-    window2.bkgd(" ", curses.color_pair(3))
+    window2.bkgd(" ", curses.color_pair(2))
     # 枠線の設定
     window.border()
     window2.border()
@@ -215,10 +209,14 @@ if __name__ == "__main__":
 
     def main(stdscr):
         curses.curs_set(False)
-        curses.resize_term(main_height, MAIN_WIN_WIDTH)
+        curses.start_color()
+        curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
+        curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
+        curses.init_pair(3, curses.COLOR_BLACK, curses.COLOR_WHITE)
+        curses.init_pair(4, curses.COLOR_WHITE, curses.COLOR_BLACK)
+        curses.resize_term(MAIN_WIN_HEIGHT, MAIN_WIN_WIDTH)
         select = boss_select_menu(stdscr)
         curses.curs_set(True)
-
         return select
 
     print(curses.wrapper(main))
