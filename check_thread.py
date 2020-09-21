@@ -17,7 +17,7 @@ from util import DEFAULT_INTERVAL, TWEET_ID_BUFFER, get_rescue_ID
 JST = dt.timezone(dt.timedelta(hours=9))
 
 
-class Check_tweet(Thread):
+class CheckTweet(Thread):
     """
     tweet取得からIDコピーまでの処理を停止されるまで行なうThread拡張クラス
 
@@ -45,9 +45,6 @@ class Check_tweet(Thread):
         self.search_query = search_query
         self.status_monitor = monitor
         self.since_id = "0"
-        self.last_tweet_create_at = dt.datetime.now().astimezone(JST) - dt.timedelta(
-            minutes=1
-        )
         clear_logged_battle_id()
 
     def run(self):
@@ -148,8 +145,8 @@ class Check_tweet_status_monitor(Thread):
         pass
 
     def print_status(self):
-        if self.status.get("status_code"):
-            print("API status: NG ({})".format(self.status.get("status_code")))
+        if self.status.get("error"):
+            print("API status: NG ({})".format((self.status.get("error").status_code)))
         elif self.status.get("newid"):
             print("API status: OK")
             print("ID: {}".format(self.status.get("newid")))
@@ -166,7 +163,7 @@ if __name__ == "__main__":
     str_q = '"Lvl 200 Akasha" OR "Lv200 アーカーシャ"'
     # str_q = "わーい"
     print(str_q)
-    ct = Check_tweet(str_q)
+    ct = CheckTweet(str_q)
     ct.start()
     while True:
         time.sleep(1000000)
