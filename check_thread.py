@@ -74,10 +74,10 @@ class CheckTweet(Thread):
             date (dt.datetime): 対象のツイートが投稿された時間
             status_code (int): エラー時のHTTPStatusCode
         """
-        status_monitor = Check_tweet_status_monitor(
+        refresh_thread = RefreshStatusMonitor(
             status_window=self.status_monitor, **status
         )
-        status_monitor.start()
+        refresh_thread.start()
 
     def update_interval(self, seconds: float):
         """update_interval
@@ -118,7 +118,7 @@ class CheckTweet(Thread):
             self.update_monitor(status_code=faild.status_code)
 
 
-class Check_tweet_status_monitor(Thread):
+class RefreshStatusMonitor(Thread):
     """
     Check_tweetスレッドの状態/情報表示を行なうスレッド
     """
