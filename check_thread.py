@@ -3,7 +3,6 @@ tweet取得からIDコピまでの処理を行なうThread拡張クラスを定�
 Attributes:
     JST (dt.timezone): "Asia/Tokyo"のタイムゾーンオブジェクト
 """
-import curses
 import datetime as dt
 import time
 from threading import Thread
@@ -12,12 +11,13 @@ import pyperclip
 
 import tweet as tm
 from db import clear_logged_battle_id, log_battle_id
+from status_monitor import StatusMonitor
 from util import DEFAULT_INTERVAL, TWEET_ID_BUFFER, get_rescue_ID
 
 JST = dt.timezone(dt.timedelta(hours=9))
 
 
-class Check_tweet(Thread):
+class CheckTweet(Thread):
     """
     tweet取得からIDコピーまでの処理を停止されるまで行なうThread拡張クラス
 
@@ -32,7 +32,7 @@ class Check_tweet(Thread):
 
     TWEET_DATETIME_FORMAT = "%a %b %d %H:%M:%S %z %Y"
 
-    def __init__(self, search_query, monitor: curses.window = None):
+    def __init__(self, search_query, monitor: StatusMonitor = None):
         """
         Args:
             search_query(str): tweet検索に使う文字列
@@ -45,9 +45,6 @@ class Check_tweet(Thread):
         self.search_query = search_query
         self.status_monitor = monitor
         self.since_id = "0"
-        self.last_tweet_create_at = dt.datetime.now().astimezone(JST) - dt.timedelta(
-            minutes=1
-        )
         clear_logged_battle_id()
 
     def run(self):
@@ -77,10 +74,10 @@ class Check_tweet(Thread):
             date (dt.datetime): 対象のツイートが投稿された時間
             status_code (int): エラー時のHTTPStatusCode
         """
-        status_monitor = Check_tweet_status_monitor(
+        refresh_thread = RefreshStatusMonitor(
             status_window=self.status_monitor, **status
         )
-        status_monitor.start()
+        refresh_thread.start()
 
     def update_interval(self, seconds: float):
         """update_interval
@@ -117,39 +114,47 @@ class Check_tweet(Thread):
                     pyperclip.copy(battle_id)
                     self.update_monitor(newid=battle_id, date=tweet_date)
                     break
+            self.update_monitor(interval=self.interval)
+
         except tm.RequestFaildError as faild:
-            self.update_monitor(status_code=faild.status_code)
+            self.update_monitor(error=faild)
 
 
-class Check_tweet_status_monitor(Thread):
+class RefreshStatusMonitor(Thread):
     """
     Check_tweetスレッドの状態/情報表示を行なうスレッド
     """
 
-    def __init__(self, status_window: curses.window = None, **status):
+    def __init__(self, status_window: StatusMonitor = None, **status):
         super().__init__()
         self.daemon = True
         self.running_flag = True
         self.api_status = True
         self.monitor = status_window
         self.status = status
-        self.status_updated_flag = True
 
     def run(self):
         self.update_monitor()
 
     def update_monitor(self):
         if self.monitor:
-            pass
+            self.update_status_window()
         else:
             self.print_status()
 
     def update_status_window(self):
-        pass
+        if self.status.get("error"):
+            self.monitor.error_update(self.status.get("error"))
+        elif self.status.get("interval"):
+            self.monitor.update_request_status(interval=self.status.get("interval"))
+        elif self.status.get("newid"):
+            self.monitor.update_recent_log(
+                battle_id=self.status.get("newid"), tweet_date=self.status.get("date")
+            )
 
     def print_status(self):
-        if self.status.get("status_code"):
-            print("API status: NG ({})".format(self.status.get("status_code")))
+        if self.status.get("error"):
+            print("API status: NG ({})".format((self.status.get("error").status_code)))
         elif self.status.get("newid"):
             print("API status: OK")
             print("ID: {}".format(self.status.get("newid")))
@@ -166,7 +171,7 @@ if __name__ == "__main__":
     str_q = '"Lvl 200 Akasha" OR "Lv200 アーカーシャ"'
     # str_q = "わーい"
     print(str_q)
-    ct = Check_tweet(str_q)
+    ct = CheckTweet(str_q)
     ct.start()
     while True:
         time.sleep(1000000)

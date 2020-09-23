@@ -1,11 +1,20 @@
 [global]
+# plese do not change
 Tweet_limit = 100
 Tweet_id_buffer = 100
+
+# request interval parameters
+Interval_pattern = [
+  1, # fast
+  3, # normal and default
+  5  # slow
+]
+
+# if your OS is windows, change this to false
 Support_Muiltibyte = true
-Default_interval = 5
 
 [APIkeys]
 API_Key = "your apo key"
-API_Key_Secret = "your apo key secret"
+API_Key_Secret = "your app key secret"
 Accsess_Token = "your accsess token"
 Accsess_Token_Secret = "your accsess token secret"
