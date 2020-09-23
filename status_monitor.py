@@ -84,11 +84,25 @@ class StatusMonitor:
         self.api_monitor.addstr(9, self.subwin_width - 1 - len(now) - 1, now)
         self.api_monitor.refresh()
 
-    def update_recent_log(self, battle_id: str, tweet_date: dt.datetime):
+    def update_recent_log(
+        self, battle_id: str, tweet_date: dt.datetime, now: dt.datetime
+    ):
 
         # 記錄ID追記
         self.recent_pad.scroll()
+
+        # title
+        self.recent_pad.addstr(
+            1, 1, "".join([" " for index in range(self.subwin_width - 2)])
+        )
         self.recent_pad.addstr(1, 1, "< Recent >", curses.A_BOLD)
+
+        # header
+        self.recent_pad.addstr(
+            2, 1, "".join([" " for index in range(self.subwin_width - 2)])
+        )
+        self.recent_pad.addstr(2, 2, "id       - posttime : delay")
+
         self.recent_pad.addstr(
             MIDDLE_PART_HEIGHT - 2,
             1,
@@ -97,7 +111,9 @@ class StatusMonitor:
         self.recent_pad.addstr(
             MIDDLE_PART_HEIGHT - 2,
             2,
-            "{} - {}".format(battle_id, tweet_date.strftime("%H:%M:%S")),
+            "{} - {} : {}".format(
+                battle_id, tweet_date.strftime("%H:%M:%S"), now - tweet_date
+            ),
         )
         self.recent_pad.border()
 

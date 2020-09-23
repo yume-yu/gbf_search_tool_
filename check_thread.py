@@ -149,7 +149,9 @@ class RefreshStatusMonitor(Thread):
             self.monitor.update_request_status(interval=self.status.get("interval"))
         elif self.status.get("newid"):
             self.monitor.update_recent_log(
-                battle_id=self.status.get("newid"), tweet_date=self.status.get("date")
+                battle_id=self.status.get("newid"),
+                tweet_date=self.status.get("date"),
+                now=dt.datetime.now().astimezone(JST),
             )
 
     def print_status(self):
