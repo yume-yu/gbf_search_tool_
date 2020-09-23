@@ -1,10 +1,10 @@
 import json
 from http import HTTPStatus
 
-from requests_oauthlib import OAuth1Session
+from oauthlib.oauth2 import BackendApplicationClient
+from requests_oauthlib import OAuth2Session
 
-from util import (ACCESS_TOKEN, ACCESS_TOKEN_SECRET, CONSUMER_KEY,
-                  CONSUMER_SECRET, TWEET_LIMIT, Error)
+from util import CONSUMER_KEY, CONSUMER_SECRET, TWEET_LIMIT, Error
 
 
 class Tweet:
@@ -15,8 +15,10 @@ class Tweet:
         SEARCH_API_URL: Twitter Standard Search API のリクエストUrl
     """
 
-    # Twitter Endpoint(検索結果を取得する)
+    # Twitter Endpoint
+    TOKEN_OAUTH_URL = "https://api.twitter.com/oauth2/token"
     SEARCH_API_URL = "https://api.twitter.com/1.1/search/tweets.json"
+    RATE_LIMIT_URL = "https://api.twitter.com/1.1/application/rate_limit_status.json"
 
     def __init__(self):
         self.session = self.init_sesstion()
@@ -32,9 +34,25 @@ class Tweet:
         Raise:
             AttributeError: 設定ファイルに適切なキーが存在しなかったとき
         """
-        twitter = OAuth1Session(
-            CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET
+
+        # 初回のトークン取得
+        client = BackendApplicationClient(client_id=CONSUMER_KEY)
+        oauth = OAuth2Session(client=client)
+        token = oauth.fetch_token(
+            token_url=self.TOKEN_OAUTH_URL,
+            client_id=CONSUMER_KEY,
+            client_secret=CONSUMER_SECRET,
         )
+        twitter = OAuth2Session(
+            client=client,
+            token=token,
+            auto_refresh_url=self.TOKEN_OAUTH_URL,
+            auto_refresh_kwargs={
+                "client_id": CONSUMER_KEY,
+                "client_secret": CONSUMER_SECRET,
+            },
+        )
+
         return twitter
 
     def search_tweet(self, keyword: str, since_id: str = "0"):
@@ -63,9 +81,6 @@ class Tweet:
             "result_type": "recent",
         }
 
-        if not self.session.authorized:
-            self.session = self.init_sesstion()
-
         req = self.session.get(self.SEARCH_API_URL, params=params)
 
         if req.status_code == 200:
@@ -73,6 +88,28 @@ class Tweet:
             return res["statuses"]
         else:
             raise RequestFaildError(req.status_code)
+
+    def get_rate_limits(self):
+        """get_rate_limits
+
+        Twitter APIからRate Limitの情報を取得する
+
+        Returns:
+            dict: API Rate limitの情報
+
+        Raises:
+            RequestFaildError: 何らかの理由でリクエストに失敗したとき
+
+        """
+
+        req = self.session.get(self.RATE_LIMIT_URL)
+
+        if req.status_code == 200:
+            res = json.loads(req.text)
+            return res.get("resources")
+        else:
+            raise RequestFaildError(req.status_code)
+        pass
 
 
 class RequestFaildError(Error):
@@ -105,6 +142,15 @@ class RequestFaildError(Error):
 
 
 if __name__ == "__main__":
+
+    from pprint import pprint
+    from datetime import datetime as dt
+
+    tw = Tweet()
+    pprint(tw.get_rate_limits().get("application"))
+    pprint(tw.get_rate_limits().get("search"))
+    unixtime = tw.get_rate_limits().get("search").get("/search/tweets").get("reset")
+    print(dt.fromtimestamp(unixtime))
     try:
         raise RequestFaildError(406)
     except RequestFaildError as rf:
