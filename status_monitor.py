@@ -11,7 +11,7 @@ import datetime as dt
 
 from tweet import RequestFaildError
 from util import (BOTTOM_PART_HEIGHT, MAIN_WIN_HEIGHT, MAIN_WIN_WIDTH,
-                  MIDDLE_PART_HEIGHT, TOP_PART_HEIGHT)
+                  MIDDLE_PART_HEIGHT, TOP_PART_HEIGHT, gbss_addstr)
 
 
 class StatusMonitor:
@@ -23,7 +23,7 @@ class StatusMonitor:
         self.title_pad = self.window.subpad(TOP_PART_HEIGHT, MAIN_WIN_WIDTH, 0, 0)
         self.title_pad.bkgd(curses.color_pair(4))
         self.title_pad.addstr(1, 1, "< Target >", curses.A_BOLD)
-        self.title_pad.addstr(2, 1, boss_info.get("boss_name"))
+        gbss_addstr(self.title_pad, 2, 1, boss_info.get("boss_name"))
         self.title_pad.border()
         self.title_pad.refresh()
 
