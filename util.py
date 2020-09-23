@@ -9,6 +9,7 @@ ACCESS_TOKEN = ""
 ACCESS_TOKEN_SECRET = ""
 TWEET_LIMIT = 0
 DEFAULT_INTERVAL = 9999999
+INTERVAL_PATTERN = []
 SUPPORT_MULTIBYTE = None
 TWEET_ID_BUFFER = 0
 GLOBAL_PARAMS = "global"
@@ -33,11 +34,12 @@ class Error(Exception):
 
 def setup():
     # 一般設定読み込み
-    global TWEET_LIMIT, SUPPORT_MULTIBYTE, DEFAULT_INTERVAL, TWEET_ID_BUFFER
+    global TWEET_LIMIT, SUPPORT_MULTIBYTE, DEFAULT_INTERVAL, TWEET_ID_BUFFER, INTERVAL_PATTERN
 
     TWEET_LIMIT = configs.get(GLOBAL_PARAMS).get("Tweet_limit")
     SUPPORT_MULTIBYTE = configs.get(GLOBAL_PARAMS).get("Support_Muiltibyte")
-    DEFAULT_INTERVAL = configs.get(GLOBAL_PARAMS).get("Default_interval")
+    INTERVAL_PATTERN = configs.get(GLOBAL_PARAMS).get("Interval_pattern")
+    DEFAULT_INTERVAL = INTERVAL_PATTERN[1]
     TWEET_ID_BUFFER = configs.get(GLOBAL_PARAMS).get("Tweet_id_buffer")
 
     # APIキーの設定読み込み
