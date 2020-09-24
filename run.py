@@ -1,7 +1,7 @@
 import curses
 import time
 
-from check_thread import CheckTweet
+from check_thread import CheckRateLimit, CheckTweet
 from select_boss import boss_select_menu
 from status_monitor import StatusMonitor
 from util import INTERVAL_PATTERN, MAIN_WIN_HEIGHT, MAIN_WIN_WIDTH
@@ -29,12 +29,14 @@ def main(stdscr):
     select = boss_select_menu(stdscr)
     stdscr.clear()
     monitor = StatusMonitor(stdscr, select)
-    thread = CheckTweet(search_query=select.get("search_query"), monitor=monitor)
-    thread.start()
+    check_tweet = CheckTweet(search_query=select.get("search_query"), monitor=monitor)
+    check_rate_linit = CheckRateLimit(monitor=monitor)
+    check_tweet.start()
+    check_rate_linit.start()
     while True:
         try:
             key = stdscr.getkey()
-            if do_action(key, thread):
+            if do_action(key, check_tweet):
                 pass
             else:
                 return
