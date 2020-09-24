@@ -153,6 +153,14 @@ class RefreshStatusMonitor(Thread):
                 tweet_date=self.status.get("date"),
                 now=dt.datetime.now().astimezone(JST),
             )
+        elif self.status.get("limit"):
+            self.monitor.update_rate_limit(
+                limit=self.status.get("limit"),
+                remaining=self.status.get("remaining"),
+                reset=dt.datetime.fromtimestamp(
+                    int(self.status.get("reset"))
+                ).astimezone(JST),
+            )
 
     def print_status(self):
         if self.status.get("error"):
@@ -167,6 +175,46 @@ class RefreshStatusMonitor(Thread):
             )
         print("last update: {}".format(dt.datetime.now().astimezone(JST)))
         print("------------------------------------------")
+
+
+class CheckRateLimit(Thread):
+    def __init__(self, monitor: StatusMonitor = None):
+        super().__init__()
+        self.daemon = True
+        self.running_flag = True
+        self.status_monitor = monitor
+        self.tweet = tm.Tweet()
+
+    def stop(self):
+        """stop
+
+        このスレッドを停止する。
+        """
+        self.status_monitor.stop()
+        self.running_flag = False
+
+    def run(self):
+        while self.running_flag:
+            limit_info = (
+                self.tweet.get_rate_limits().get("search").get("/search/tweets")
+            )
+            self.update_monitor(**limit_info)
+            time.sleep(5)
+
+    def update_monitor(self, **status):
+        """update_monitor
+
+        /search/tweets のRateLimit表示を更新する
+
+        Args:
+            limit(int): APIの許容リクエスト数
+            remaining(int): 一定時間内にリクエスト可能な残り回数
+            reset(int): リクエスト可能回数のリセット日時のunixtime
+        """
+        refresh_thread = RefreshStatusMonitor(
+            status_window=self.status_monitor, **status
+        )
+        refresh_thread.start()
 
 
 if __name__ == "__main__":
