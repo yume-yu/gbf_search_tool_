@@ -45,8 +45,12 @@ class StatusMonitor:
         self.api_monitor.bkgd(curses.color_pair(4))
         self.api_monitor.addstr(1, 1, "< About Request >", curses.A_BOLD)
         self.api_monitor.addstr(2, 1, "API Status:")
-        self.api_monitor.addstr(5, 1, "Request interval [s/req]:")
-        self.api_monitor.addstr(8, 1, "last update:")
+        self.api_monitor.addstr(3, 1, "Request interval [s/req]:")
+        self.api_monitor.addstr(4, 1, "Last update:")
+        self.api_monitor.addstr(6, 1, "< About Rate Limit >", curses.A_BOLD)
+        self.api_monitor.addstr(7, 1, "Rate Limit [/15min]:")
+        self.api_monitor.addstr(8, 1, "Remaining:")
+        self.api_monitor.addstr(9, 1, "Reset at:")
         self.api_monitor.border()
         self.api_monitor.refresh()
 
@@ -64,31 +68,55 @@ class StatusMonitor:
     def update_request_status(self, interval: int):
         # API状況更新
         self.api_monitor.addstr(
-            3, 1, "".join([" " for index in range(self.subwin_width - 2)])
+            2,
+            1 + len("API Status:"),
+            "".join(
+                [" " for index in range(self.subwin_width - 2 - len("API Status:"))]
+            ),
         )
         self.api_monitor.addstr(
-            4, 1, "".join([" " for index in range(self.subwin_width - 2)])
-        )
-        self.api_monitor.addstr(
-            3, (self.subwin_width - 1 - len("OK") - 1), "OK", curses.color_pair(1)
+            2, (self.subwin_width - 1 - len("OK") - 1), "OK", curses.color_pair(1)
         )
 
         self.api_monitor.addstr(
-            6, 1, "".join([" " for index in range(self.subwin_width - 2)])
+            3,
+            1 + len("Request interval [s/req]:"),
+            "".join(
+                [
+                    " "
+                    for index in range(
+                        self.subwin_width - 2 - len("Request interval [s/req]:")
+                    )
+                ]
+            ),
         )
         self.api_monitor.addstr(
-            6, (self.subwin_width - 1 - len(str(interval)) - 1), str(interval)
+            3, (self.subwin_width - 1 - len(str(interval)) - 1), str(interval)
         )
 
-        now = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.api_monitor.addstr(9, self.subwin_width - 1 - len(now) - 1, now)
+        now = dt.datetime.now().strftime("%H:%M:%S")
+        self.api_monitor.addstr(4, self.subwin_width - 1 - len(now) - 1, now)
         self.api_monitor.refresh()
 
-    def update_recent_log(self, battle_id: str, tweet_date: dt.datetime):
+    def update_recent_log(
+        self, battle_id: str, tweet_date: dt.datetime, now: dt.datetime
+    ):
 
         # 記錄ID追記
         self.recent_pad.scroll()
+
+        # title
+        self.recent_pad.addstr(
+            1, 1, "".join([" " for index in range(self.subwin_width - 2)])
+        )
         self.recent_pad.addstr(1, 1, "< Recent >", curses.A_BOLD)
+
+        # header
+        self.recent_pad.addstr(
+            2, 1, "".join([" " for index in range(self.subwin_width - 2)])
+        )
+        self.recent_pad.addstr(2, 2, "id       - posttime : delay")
+
         self.recent_pad.addstr(
             MIDDLE_PART_HEIGHT - 2,
             1,
@@ -97,7 +125,9 @@ class StatusMonitor:
         self.recent_pad.addstr(
             MIDDLE_PART_HEIGHT - 2,
             2,
-            "{} - {}".format(battle_id, tweet_date.strftime("%H:%M:%S")),
+            "{} - {} : {}".format(
+                battle_id, tweet_date.strftime("%H:%M:%S"), now - tweet_date
+            ),
         )
         self.recent_pad.border()
 
@@ -108,22 +138,62 @@ class StatusMonitor:
 
         # API状況更新
         self.api_monitor.addstr(
-            3, 1, "".join([" " for index in range(self.subwin_width - 2)])
+            2,
+            1 + len("API Status:"),
+            "".join(
+                [" " for index in range(self.subwin_width - 2 - len("API Status:"))]
+            ),
         )
         self.api_monitor.addstr(
-            4, 1, "".join([" " for index in range(self.subwin_width - 2)])
-        )
-        self.api_monitor.addstr(
-            3, (self.subwin_width - 1 - len("NG") - 1), "NG", curses.color_pair(2)
-        )
-        self.api_monitor.addstr(
-            3, (self.subwin_width - 1 - len(message) - 1), message, curses.color_pair(2)
+            2,
+            (self.subwin_width - 1 - len("NG :" + message) - 1),
+            "NG :" + message,
+            curses.color_pair(2),
         )
 
-        now = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.api_monitor.addstr(9, self.subwin_width - 1 - len(now) - 1, now)
+        now = dt.datetime.now().strftime("%H:%M:%S")
+        self.api_monitor.addstr(4, self.subwin_width - 1 - len(now) - 1, now)
         self.recent_pad.refresh()
         self.api_monitor.refresh()
+
+    def update_rate_limit(self, limit: int, remaining: int, reset: dt.datetime):
+        self.api_monitor.addstr(
+            7,
+            1 + len("Rate Limit [/15min]:"),
+            "".join(
+                [
+                    " "
+                    for index in range(
+                        self.subwin_width - 2 - len("Rate Limit [/15min]:")
+                    )
+                ]
+            ),
+        )
+        self.api_monitor.addstr(
+            7, self.subwin_width - 1 - len(str(limit)) - 1, str(limit)
+        )
+
+        self.api_monitor.addstr(
+            8,
+            1 + len("Remaining:"),
+            "".join(
+                [" " for index in range(self.subwin_width - 2 - len("Remaining:"))]
+            ),
+        )
+        self.api_monitor.addstr(
+            8, self.subwin_width - 1 - len(str(remaining)) - 1, str(remaining)
+        )
+
+        self.api_monitor.addstr(
+            9,
+            1 + len("Reset at:"),
+            "".join([" " for index in range(self.subwin_width - 2 - len("Reset at:"))]),
+        )
+        reset_time = reset.strftime("%H:%M:%S")
+        self.api_monitor.addstr(
+            9, self.subwin_width - 1 - len(reset_time) - 1, str(reset_time)
+        )
+        pass
 
 
 if __name__ == "__main__":
