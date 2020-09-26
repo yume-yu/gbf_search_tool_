@@ -1,3 +1,4 @@
+import datetime as dt
 import re
 
 import toml
@@ -23,6 +24,7 @@ MIDDLE_PART_HEIGHT = 11
 BOTTOM_PART_HEIGHT = 4
 MAIN_WIN_HEIGHT = TOP_PART_HEIGHT + MIDDLE_PART_HEIGHT + BOTTOM_PART_HEIGHT
 
+JST = dt.timezone(dt.timedelta(hours=9))
 configs = toml.load("./config.toml")
 
 

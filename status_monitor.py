@@ -10,13 +10,14 @@ import curses
 import datetime as dt
 
 from tweet import RequestFaildError
-from util import (BOTTOM_PART_HEIGHT, MAIN_WIN_HEIGHT, MAIN_WIN_WIDTH,
+from util import (BOTTOM_PART_HEIGHT, JST, MAIN_WIN_HEIGHT, MAIN_WIN_WIDTH,
                   MIDDLE_PART_HEIGHT, TOP_PART_HEIGHT, gbss_addstr)
 
 
 class StatusMonitor:
-    def __init__(self, stdscr: curses.window, boss_info: dict):
+    def __init__(self, stdscr: curses.window, ratelimit_statuses, boss_info: dict):
         self.window = stdscr
+        self.ratelimit_statuses = ratelimit_statuses
         self.subwin_width = int(MAIN_WIN_WIDTH / 2)
 
         #  タイトル部分表示
@@ -66,6 +67,7 @@ class StatusMonitor:
         self.control_explain.refresh()
 
     def update_request_status(self, interval: int):
+        self.update_rate_limit()
         # API状況更新
         self.api_monitor.addstr(
             2,
@@ -156,7 +158,7 @@ class StatusMonitor:
         self.recent_pad.refresh()
         self.api_monitor.refresh()
 
-    def update_rate_limit(self, limit: int, remaining: int, reset: dt.datetime):
+    def update_rate_limit(self):
         self.api_monitor.addstr(
             7,
             1 + len("Rate Limit [/15min]:"),
@@ -170,7 +172,9 @@ class StatusMonitor:
             ),
         )
         self.api_monitor.addstr(
-            7, self.subwin_width - 1 - len(str(limit)) - 1, str(limit)
+            7,
+            self.subwin_width - 1 - len(str(self.ratelimit_statuses[0])) - 1,
+            str(self.ratelimit_statuses[0]),
         )
 
         self.api_monitor.addstr(
@@ -181,7 +185,9 @@ class StatusMonitor:
             ),
         )
         self.api_monitor.addstr(
-            8, self.subwin_width - 1 - len(str(remaining)) - 1, str(remaining)
+            8,
+            self.subwin_width - 1 - len(str(self.ratelimit_statuses[1])) - 1,
+            str(self.ratelimit_statuses[1]),
         )
 
         self.api_monitor.addstr(
@@ -189,11 +195,14 @@ class StatusMonitor:
             1 + len("Reset at:"),
             "".join([" " for index in range(self.subwin_width - 2 - len("Reset at:"))]),
         )
-        reset_time = reset.strftime("%H:%M:%S")
+        reset_time = (
+            dt.datetime.fromtimestamp(self.ratelimit_statuses[2])
+            .astimezone(JST)
+            .strftime("%H:%M:%S")
+        )
         self.api_monitor.addstr(
             9, self.subwin_width - 1 - len(reset_time) - 1, str(reset_time)
         )
-        pass
 
     def please_wait_view(self):
         height = int(MAIN_WIN_HEIGHT / 2)
