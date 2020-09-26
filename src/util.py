@@ -7,7 +7,7 @@ import toml
 from requests_oauthlib import OAuth1Session
 
 # tweet取得系定数
-USE_USER_OAUTH = True
+USE_USER_OAUTH = False
 CONSUMER_KEY = ""
 CONSUMER_SECRET = ""
 ACCESS_TOKEN = ""
