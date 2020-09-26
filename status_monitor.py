@@ -61,7 +61,7 @@ class StatusMonitor:
         self.control_explain.bkgd(curses.color_pair(4))
         self.control_explain.addstr(0, 1, "< How to Control >", curses.A_BOLD)
         self.control_explain.addstr(
-            1, 5, "q: quit this / a: slow / s: normal / d: fast"
+            1, 5, "q: quit this / a: slow / s: normal / d: fast / p: return to select"
         )
         self.control_explain.refresh()
 
@@ -194,6 +194,22 @@ class StatusMonitor:
             9, self.subwin_width - 1 - len(reset_time) - 1, str(reset_time)
         )
         pass
+
+    def please_wait_view(self):
+        height = int(MAIN_WIN_HEIGHT / 2)
+        width = int(MAIN_WIN_WIDTH / 2)
+        alert_message = "please wait"
+        alert = self.window.derwin(height, width, int(height / 2), int(width / 2))
+        alert.clear()
+        alert.bkgd(" ", curses.color_pair(4))
+        alert.addstr(
+            int(height / 2),
+            int(width / 2) - len(alert_message),
+            alert_message,
+            curses.A_BOLD,
+        )
+        alert.border()
+        alert.refresh()
 
 
 if __name__ == "__main__":

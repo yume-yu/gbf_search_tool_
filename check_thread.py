@@ -61,7 +61,6 @@ class CheckTweet(Thread):
 
         このスレッドを停止する。
         """
-        self.status_monitor.stop()
         self.running_flag = False
 
     def update_monitor(self, **status):
@@ -190,7 +189,6 @@ class CheckRateLimit(Thread):
 
         このスレッドを停止する。
         """
-        self.status_monitor.stop()
         self.running_flag = False
 
     def run(self):
