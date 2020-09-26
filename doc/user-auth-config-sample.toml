@@ -1,0 +1,9 @@
+[global]
+Tweet_limit = 100
+Tweet_id_buffer = 100
+Interval_pattern = [ 3.0, 5.5, 7.5,]
+Support_Muiltibyte = true
+
+[APIkeys]
+Accsess_Token = ""
+Accsess_Token_Secret = ""

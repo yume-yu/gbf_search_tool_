@@ -5,7 +5,9 @@ from multiprocessing import Array, Manager, freeze_support
 from check_thread import CheckRateLimit, CheckTweet
 from select_boss import boss_select_menu
 from status_monitor import StatusMonitor
-from util import INTERVAL_PATTERN, MAIN_WIN_HEIGHT, MAIN_WIN_WIDTH
+from tweet import RequestFaildError, Tweet
+from util import (INTERVAL_PATTERN, MAIN_WIN_HEIGHT, MAIN_WIN_WIDTH,
+                  get_user_access_token, setup)
 
 
 def do_action(key: str, thread: CheckTweet) -> bool:
@@ -77,4 +79,10 @@ def main(stdscr):
 
 if __name__ == "__main__":
     freeze_support()
+    setup()
+    try:
+        Tweet().get_rate_limits()
+    except RequestFaildError:
+        get_user_access_token()
+
     curses.wrapper(main)

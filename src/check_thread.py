@@ -200,8 +200,11 @@ class CheckRateLimit(Process):
     def run(self):
         tweet = tm.Tweet()
         while self.running_flag:
-            limit_info = tweet.get_rate_limits().get("search").get("/search/tweets")
-            self.update_status(**limit_info)
+            try:
+                limit_info = tweet.get_rate_limits().get("search").get("/search/tweets")
+                self.update_status(**limit_info)
+            except tm.RequestFaildError:
+                pass
             time.sleep(5)
 
     def update_status(self, limit=None, remaining=None, reset=None):
