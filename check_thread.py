@@ -5,6 +5,7 @@ Attributes:
 """
 import datetime as dt
 import time
+from multiprocessing import Process
 from threading import Thread
 
 import pyperclip
@@ -12,9 +13,7 @@ import pyperclip
 import tweet as tm
 from db import clear_logged_battle_id, log_battle_id
 from status_monitor import StatusMonitor
-from util import DEFAULT_INTERVAL, TWEET_ID_BUFFER, get_rescue_ID
-
-JST = dt.timezone(dt.timedelta(hours=9))
+from util import DEFAULT_INTERVAL, JST, TWEET_ID_BUFFER, get_rescue_ID
 
 
 class CheckTweet(Thread):
@@ -176,13 +175,20 @@ class RefreshStatusMonitor(Thread):
         print("------------------------------------------")
 
 
-class CheckRateLimit(Thread):
-    def __init__(self, monitor: StatusMonitor = None):
+class CheckRateLimit(Process):
+    """
+    TwitterAPIのsearch/tweetのAPI Rate Linitを取得するProcess拡張クラス
+
+    Attributes:
+        running_flag(bool): プロセスを維持するかどうかのフラグ
+        statuses(multiprocessing.Array): RateLimitの状況を記錄したリスト [Limit, Remaining, ResetAt]
+    """
+
+    def __init__(self, statuses):
         super().__init__()
         self.daemon = True
         self.running_flag = True
-        self.status_monitor = monitor
-        self.tweet = tm.Tweet()
+        self.statuses = statuses
 
     def stop(self):
         """stop
@@ -192,12 +198,25 @@ class CheckRateLimit(Thread):
         self.running_flag = False
 
     def run(self):
+        tweet = tm.Tweet()
         while self.running_flag:
-            limit_info = (
-                self.tweet.get_rate_limits().get("search").get("/search/tweets")
-            )
-            self.update_monitor(**limit_info)
+            limit_info = tweet.get_rate_limits().get("search").get("/search/tweets")
+            self.update_status(**limit_info)
             time.sleep(5)
+
+    def update_status(self, limit=None, remaining=None, reset=None):
+        """update_status
+
+        自身のRateLimit情報を更新する
+
+        Args:
+            limit(int): 規定された15分ごとのリクエスト許可回数
+            remaining(int): resetの時間までに許可されたリクエストの回数
+            reset(int): 次にremaingがリセットされる時間のunixtime
+        """
+        self.statuses[0] = limit
+        self.statuses[1] = remaining
+        self.statuses[2] = reset
 
     def update_monitor(self, **status):
         """update_monitor
