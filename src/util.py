@@ -7,9 +7,9 @@ import toml
 from requests_oauthlib import OAuth1Session
 
 # tweet取得系定数
-USE_USER_OAUTH = False
-CONSUMER_KEY = ""
-CONSUMER_SECRET = ""
+USE_USER_OAUTH = True
+CONSUMER_KEY = "heluc4EBrGzVbtvRPbBM3UcC0"
+CONSUMER_SECRET = "1nJf1sBLWZWX2Ez76WhgMgQTEnYUFKMN4YSBKodLxjDvbCP8hh"
 ACCESS_TOKEN = ""
 ACCESS_TOKEN_SECRET = ""
 TWEET_LIMIT = 0

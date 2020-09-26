@@ -7,7 +7,7 @@ from select_boss import boss_select_menu
 from status_monitor import StatusMonitor
 from tweet import RequestFaildError, Tweet
 from util import (INTERVAL_PATTERN, MAIN_WIN_HEIGHT, MAIN_WIN_WIDTH,
-                  USE_USER_OAUTH, get_user_access_token, setup)
+                  get_user_access_token, setup)
 
 
 def do_action(key: str, thread: CheckTweet) -> bool:

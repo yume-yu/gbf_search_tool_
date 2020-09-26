@@ -2,9 +2,10 @@ import json
 from http import HTTPStatus
 
 from oauthlib.oauth2 import BackendApplicationClient
-from requests_oauthlib import OAuth2Session
+from requests_oauthlib import OAuth1Session, OAuth2Session
 
-from util import CONSUMER_KEY, CONSUMER_SECRET, TWEET_LIMIT, Error
+from util import (ACCESS_TOKEN, ACCESS_TOKEN_SECRET, CONSUMER_KEY,
+                  CONSUMER_SECRET, TWEET_LIMIT, USE_USER_OAUTH, Error)
 
 
 class Tweet:
@@ -34,26 +35,31 @@ class Tweet:
         Raise:
             AttributeError: 設定ファイルに適切なキーが存在しなかったとき
         """
+        if USE_USER_OAUTH:
+            twitter = OAuth1Session(
+                CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET
+            )
+            return twitter
+        else:
+            # 初回のトークン取得
+            client = BackendApplicationClient(client_id=CONSUMER_KEY)
+            oauth = OAuth2Session(client=client)
+            token = oauth.fetch_token(
+                token_url=self.TOKEN_OAUTH_URL,
+                client_id=CONSUMER_KEY,
+                client_secret=CONSUMER_SECRET,
+            )
+            twitter = OAuth2Session(
+                client=client,
+                token=token,
+                auto_refresh_url=self.TOKEN_OAUTH_URL,
+                auto_refresh_kwargs={
+                    "client_id": CONSUMER_KEY,
+                    "client_secret": CONSUMER_SECRET,
+                },
+            )
 
-        # 初回のトークン取得
-        client = BackendApplicationClient(client_id=CONSUMER_KEY)
-        oauth = OAuth2Session(client=client)
-        token = oauth.fetch_token(
-            token_url=self.TOKEN_OAUTH_URL,
-            client_id=CONSUMER_KEY,
-            client_secret=CONSUMER_SECRET,
-        )
-        twitter = OAuth2Session(
-            client=client,
-            token=token,
-            auto_refresh_url=self.TOKEN_OAUTH_URL,
-            auto_refresh_kwargs={
-                "client_id": CONSUMER_KEY,
-                "client_secret": CONSUMER_SECRET,
-            },
-        )
-
-        return twitter
+            return twitter
 
     def search_tweet(self, keyword: str, since_id: str = "0"):
         """search_tweet
@@ -108,7 +114,7 @@ class Tweet:
             res = json.loads(req.text)
             return res.get("resources")
         else:
-            raise RequestFaildError(req.status_code)
+            raise RequestFaildError(req.status_code, req.text)
         pass
 
 
@@ -122,9 +128,11 @@ class RequestFaildError(Error):
         description: エラーの詳細
     """
 
-    def __init__(self, status_code: int):
+    def __init__(self, status_code: int, message=None):
         self.status_code = status_code
         self.sumally, self.description = self.convert_status_code(status_code)
+        if message:
+            self.description = message
 
     def convert_status_code(self, status_code):
         """convert_status_code
