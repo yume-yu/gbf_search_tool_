@@ -3,6 +3,7 @@
 ## これはなに? / What is this?
 ブラウザゲーム「グランブルーファンタジー」のTwitter救援検索支援ツールです。
 ボス選択画面で選んだマルチバトルの救援ツイートを検索して、もっとも新しいtweetの救援IDをクリップボードにコピーします。
+![exsample](https://user-images.githubusercontent.com/30368684/94345236-7e8d1380-005f-11eb-8b09-106493785f14.gif)
 
 ## 動作に必要な環境 / Requirements
 * Windows 10 or macOS
