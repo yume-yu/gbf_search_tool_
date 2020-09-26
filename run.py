@@ -1,5 +1,6 @@
 import curses
 import time
+from multiprocessing import Array, Manager, freeze_support
 
 from check_thread import CheckRateLimit, CheckTweet
 from select_boss import boss_select_menu
@@ -42,15 +43,21 @@ def main(stdscr):
     curses.resize_term(MAIN_WIN_HEIGHT, MAIN_WIN_WIDTH)
     need_more_loop_flag = True
 
+    """
+    Twitter APIの"search/tweet"でのRate Limit
+    Limit, remain, reset
+    """
+    ratelimit_statuses = Array("Q", 3)
+
     while need_more_loop_flag:
         need_more_loop_flag = False
         select = boss_select_menu(stdscr)
         stdscr.clear()
-        monitor = StatusMonitor(stdscr, select)
+        monitor = StatusMonitor(stdscr, ratelimit_statuses, select)
         check_tweet = CheckTweet(
             search_query=select.get("search_query"), monitor=monitor
         )
-        check_rate_linit = CheckRateLimit(monitor=monitor)
+        check_rate_linit = CheckRateLimit(statuses=ratelimit_statuses)
         check_tweet.start()
         check_rate_linit.start()
         while True:
@@ -64,8 +71,10 @@ def main(stdscr):
             except:
                 pass
         monitor.please_wait_view()
-        stop_running_threads((check_tweet, check_rate_linit))
+        stop_running_threads((check_tweet,))
         stdscr.clear()
 
 
-curses.wrapper(main)
+if __name__ == "__main__":
+    freeze_support()
+    curses.wrapper(main)
