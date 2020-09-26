@@ -15,7 +15,7 @@ NAME = "< NAME >"
 HOWTOCONTROL_TEXT = "↑↓:up&down →:ENTER ←:CANCEL"
 
 
-def boss_select_menu(stdscr: curses.window):
+def boss_select_menu(stdscr):
     """boss_select_menu
 
     検索する救援の対象のボスの選択をcursesを使ってユーザーに求める
@@ -68,7 +68,7 @@ def boss_select_menu(stdscr: curses.window):
 
 
 def update_printed_lebels(
-    window: curses.window,
+    window,
     width: int,
     datas: list,
     maxnum: int,
@@ -138,7 +138,7 @@ def update_printed_lebels(
     return (top, bottom, selected)
 
 
-def scrolled_menu(window: curses.window, datas: list, tag: str):
+def scrolled_menu(window, datas: list, tag: str):
     """menu
 
     cursesを使って引数のリストを表示してユーザーに選択を促す。

@@ -15,7 +15,7 @@ from util import (BOTTOM_PART_HEIGHT, JST, MAIN_WIN_HEIGHT, MAIN_WIN_WIDTH,
 
 
 class StatusMonitor:
-    def __init__(self, stdscr: curses.window, ratelimit_statuses, boss_info: dict):
+    def __init__(self, stdscr, ratelimit_statuses, boss_info: dict):
         self.window = stdscr
         self.ratelimit_statuses = ratelimit_statuses
         self.subwin_width = int(MAIN_WIN_WIDTH / 2)
