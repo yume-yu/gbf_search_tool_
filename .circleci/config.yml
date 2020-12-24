@@ -1,0 +1,19 @@
+version: 2.1
+
+jobs:
+  build:
+    docker:
+      - image: yumatchang/pyinstaller-windows-with-git
+    steps:
+      - checkout
+      - run:
+          command: /usr/bin/pip install -r requirements.txt && /usr/bin/pip install windows-curses
+          name: Install modules
+      - run:
+          command: cd src && pyinstaller run.py --onefile --clean
+          name: Build
+
+workflows:
+  main:
+    jobs:
+      - build
