@@ -18,6 +18,8 @@ class Tweet:
 
     # Twitter Endpoint
     TOKEN_OAUTH_URL = "https://api.twitter.com/oauth2/token"
+    FILTER_RULE_URL = 'https://api.twitter.com/2/tweets/search/stream/rules'
+    FILTERED_STREAM_URL = 'https://api.twitter.com/2/tweets/search/stream'
     SEARCH_API_URL = "https://api.twitter.com/1.1/search/tweets.json"
     RATE_LIMIT_URL = "https://api.twitter.com/1.1/application/rate_limit_status.json"
 
@@ -58,8 +60,143 @@ class Tweet:
                     "client_secret": CONSUMER_SECRET,
                 },
             )
-
             return twitter
+
+    def get_filter_rule(self):
+        """get_filter_rule
+
+        現在登録されているFilter ruleを取得する
+        https://developer.twitter.com/en/docs/twitter-api/tweets/filtered-stream/api-reference/get-tweets-search-stream-rules
+
+        Returns:
+            dict: APIから返されたレスポンス
+
+        Examples:
+            ```python
+            tw = Tweet()
+            response = tw.get_filter_rule()
+            pprint(response)
+            > {'data': [{'id': '1587836298793914369',
+            >            'tag': 'tuyo',
+            >            'value': '("Lvl 150 Proto Bahamut") '
+            >                     '-is:retweet'}],
+            >  'meta': {'result_count': 1, 'sent': '2022-11-02T15:57:29.101Z'}}
+            ```
+
+        """
+        filters = []
+        with self.session.get(url=self.FILTER_RULE_URL) as res:
+            filters = json.loads(res.text)
+
+        return filters
+
+    def add_filter_rule(self, **kargs):
+        """add_filter_rule
+
+        指定したルールを追加する。filtersでlistが渡されているときはその内容を追加する。
+        https://developer.twitter.com/en/docs/twitter-api/tweets/filtered-stream/api-reference/post-tweets-search-stream-rules
+
+        Args:
+            filters(list<dict>): {name: '[filter name]', find_value: '[find me]'} のリスト
+            tag(str): 追加するフィルターの名前
+            value(str): 検索文字列
+
+        Returns:
+            dict: APIから返されたレスポンス
+
+        Examples:
+            ```python
+            tw = Tweet()
+            response = tw.get_filter_rule()
+            pprint(response)
+            > {'data': [{'id': '1587836298793914369',
+            >            'tag': 'tuyo',
+            >            'value': '("Lvl 150 Proto Bahamut") '
+            >                     '-is:retweet'}],
+            >  'meta': {'result_count': 1, 'sent': '2022-11-02T15:57:29.101Z'}}
+            ```
+
+        """
+        add = []
+        if kargs.get('filters'):
+            add = kargs.get('filters')
+        else:
+            add.append({
+                'value': kargs.get('value'),
+                'tag': kargs.get('tag')
+            })
+        data = {
+            'add': add
+        }
+        with self.session.post(url=self.FILTER_RULE_URL, json=data) as res:
+            return res
+
+    def delete_filter_rule(self, ids: list):
+        """delete_filter_rule
+
+        引数で指定されたidを持つFilterRuleを削除する
+        https://developer.twitter.com/en/docs/twitter-api/tweets/filtered-stream/api-reference/post-tweets-search-stream-rules
+
+        Args:
+            ids(list<str>): 削除するルールのidを持ったリスト
+
+        Returns:
+            dict: APIから返されたレスポンス
+
+        Examples:
+            ```python
+            tw = Tweet()
+            target_ids = ['1587836298793914369']
+            response = tw.delete_filter_rule(target_ids)
+            pprint(filter)
+            > {'meta': {'sent': '2022-11-02T16:14:43.430Z',
+            >          'summary': {'deleted': 1, 'not_deleted': 0}}}
+            ```
+
+        """
+        data = {
+            'delete':{
+                'ids': ids
+            }
+        }
+        with self.session.post(url=self.FILTER_RULE_URL, json=data) as res:
+            return res
+
+    def clear_filter_rule(self):
+        """clear_filter_rule
+
+        現在のFilterRuleをすべて削除する
+
+        Returns:
+            dict: APIから返されたレスポンス
+
+        Examples:
+            ```python
+            tw = Tweet()
+            target_ids = ['1587836298793914369']
+            response = tw.delete_filter_rule(target_ids)
+            pprint(filter)
+            > {'meta': {'sent': '2022-11-02T16:14:43.430Z',
+            >          'summary': {'deleted': 1, 'not_deleted': 0}}}
+            ```
+        """
+        filters = self.get_filter_rule()
+        if filters.get('data'):
+            ids = [filter.get('id') for filter in filters.get('data')]
+            self.delete_filter_rule(ids)
+
+    def open_filtered_stram(self, params: dict = None):
+        """open_filtered_stram
+
+        FilteredStreamを開く。
+        https://developer.twitter.com/en/docs/twitter-api/tweets/filtered-stream/api-reference/get-tweets-search-stream
+        Args:
+            params(dict): APIを利用する際のパラメータ。取得するTweetの情報などが指定できる
+
+        Returns:
+            requests.models.Response: Getリクエストが維持されているHttpStream
+        """
+        return self.session.get(url=self.FILTERED_STREAM_URL, stream=True, params=params)
 
     def search_tweet(self, keyword: str, since_id: str = "0"):
         """search_tweet
@@ -155,6 +292,17 @@ if __name__ == "__main__":
     from datetime import datetime as dt
 
     tw = Tweet()
+    url = 'https://api.twitter.com/2/tweets/search/stream'
+    tw.clear_filter_rule()
+    pprint(tw.add_filter_rule(tag='hoge', value='("Lvl 150 Proto Bahamut" OR "Lv150 プロトバハムート") -is:retweet').text)
+    # pprint(tw.get_filter_rule())
+    res = tw.open_filtered_stram()
+    print(type(res))
+    for chunk in res.iter_lines():
+        if len(chunk) != 0:
+            pprint(json.loads(chunk))
+            print(json.loads(chunk).get('data').get('text'))
+
     pprint(tw.get_rate_limits().get("application"))
     pprint(tw.get_rate_limits().get("search"))
     unixtime = tw.get_rate_limits().get("search").get("/search/tweets").get("reset")
@@ -163,3 +311,4 @@ if __name__ == "__main__":
         raise RequestFaildError(406)
     except RequestFaildError as rf:
         print(rf.description)
+
