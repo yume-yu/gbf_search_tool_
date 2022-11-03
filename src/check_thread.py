@@ -110,13 +110,17 @@ class CheckTweet(Thread):
             with tweet.open_filtered_stram(params={'tweet.fields':'created_at,text'}) as stream:
 
                 for chunk in stream.iter_lines():
-                    if len(chunk) != 0:
-                        try:
-                            Thread(target=self.find_new_tweet, args=[chunk]).run()
-                        except AttributeError:
-                            if 'connection_issue' in chunk.decode('utf-8'):
-                                raise tm.RequestFaildError(status_code=429)
-                                break
+                    try:
+                        Thread(target=self.find_new_tweet, args=[chunk]).run()
+                    except AttributeError:
+                        if 'connection_issue' in chunk.decode('utf-8'):
+                            raise tm.RequestFaildError(status_code=429)
+                            break
+                    except json.decoder.JSONDecodeError:
+                        if len(chunk) != 0:
+                            pass
+                        else:
+                            pass
                     if not self.running_flag:
                         break
 

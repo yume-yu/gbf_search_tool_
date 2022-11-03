@@ -115,12 +115,8 @@ def token_check():
 
 
 def get_rescue_ID(tweet_text: str):
-    try:
-        found_id = re.match(ID_EXTRACTION_PATTERN, tweet_text).group("ID")
-    except AttributeError:
-        return (False, None)
-    else:
-        return (True, found_id)
+    found_id = re.match(ID_EXTRACTION_PATTERN, tweet_text).group("ID")
+    return (True, found_id)
 
 
 def format_string_for_addstr(string4print: str):
