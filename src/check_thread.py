@@ -4,7 +4,9 @@ Attributes:
     JST (dt.timezone): "Asia/Tokyo"のタイムゾーンオブジェクト
 """
 import datetime as dt
+import json
 import time
+import uuid
 from multiprocessing import Process
 from threading import Thread
 
@@ -13,7 +15,7 @@ import pyperclip
 import tweet as tm
 from db import clear_logged_battle_id, log_battle_id
 from status_monitor import StatusMonitor
-from util import DEFAULT_INTERVAL, JST, TWEET_ID_BUFFER, get_rescue_ID
+from util import DEFAULT_INTERVAL, JST, TWEET_ID_BUFFER, Error, get_rescue_ID
 
 
 class CheckTweet(Thread):
@@ -40,7 +42,6 @@ class CheckTweet(Thread):
         self.daemon = True
         self.running_flag = True
         self.interval = DEFAULT_INTERVAL
-        self.tweet = tm.Tweet()
         self.search_query = search_query
         self.status_monitor = monitor
         self.since_id = "0"
@@ -51,9 +52,13 @@ class CheckTweet(Thread):
 
         run this therad.
         """
-        while self.running_flag:
+        while True:
             self.get_battle_id_from_twitter()
-            time.sleep(self.interval)
+            if self.running_flag:
+                time.sleep(10) # 15min
+                #time.sleep(900) # 15min
+            else:
+                break
 
     def stop(self):
         """stop
@@ -99,24 +104,30 @@ class CheckTweet(Thread):
         ツイートを検索して、重複のないツイートが見つかったらクリップボードへ挿入する
         """
         try:
-            tweets = self.tweet.search_tweet(self.search_query, self.since_id)
-            battle_id = None
-            for tweet in tweets:
-                _, battle_id = get_rescue_ID(tweet.get("text"))
-                tweet_date = dt.datetime.strptime(
-                    tweet.get("created_at"), self.TWEET_DATETIME_FORMAT
-                ).astimezone(JST)
-                if log_battle_id(battle_id, tweet_date.isoformat()):
-                    # IDのみの指定だと取得漏れが発生しやすくなるので取得開始位置にバッファをもたせる
-                    self.since_id = str(tweet.get("id") - TWEET_ID_BUFFER)
-                    pyperclip.copy(battle_id)
-                    self.update_monitor(newid=battle_id, date=tweet_date)
+            tweet = tm.Tweet()
+            tweet.clear_filter_rule()
+            tweet.add_filter_rule(tag=str(uuid.uuid4()), value=f'({self.search_query}) -is:retweet')
+            stream = tweet.open_filtered_stram(params={'tweet.fields':'created_at,text'})
+
+            for chunk in stream.iter_lines():
+                if len(chunk) != 0:
+                    if 'connection_issue' in chunk.decode('utf-8'):
+                        raise tm.RequestFaildError(status_code=429)
+                        break
+                    Thread(target=self.find_new_tweet, args=[chunk]).run()
+                if not self.running_flag:
                     break
-            self.update_monitor(interval=self.interval)
 
         except tm.RequestFaildError as faild:
             self.update_monitor(error=faild)
 
+    def find_new_tweet(self, chunk):
+        tweet = json.loads(chunk).get('data')
+        _, battle_id = get_rescue_ID(tweet.get("text"))
+        tweet_date = dt.datetime.fromisoformat(tweet.get("created_at").replace('Z', '+00:00')).astimezone(JST)
+        pyperclip.copy(battle_id)
+        self.update_monitor(newid=battle_id, date=tweet_date)
+        self.update_monitor(interval=self.interval)
 
 class RefreshStatusMonitor(Thread):
     """
@@ -201,7 +212,7 @@ class CheckRateLimit(Process):
         tweet = tm.Tweet()
         while self.running_flag:
             try:
-                limit_info = tweet.get_rate_limits().get("search").get("/search/tweets")
+                limit_info = tweet.get_rate_limits().get("tweets").get("/tweets/search/stream")
                 self.update_status(**limit_info)
             except tm.RequestFaildError:
                 pass

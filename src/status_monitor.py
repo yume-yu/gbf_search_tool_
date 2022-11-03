@@ -136,7 +136,8 @@ class StatusMonitor:
         self.recent_pad.refresh()
 
     def error_update(self, error: RequestFaildError):
-        message = str(error.status_code) + " : " + error.sumally
+        self.update_rate_limit()
+        message = str(error.status_code) + ":" + error.sumally
 
         # API状況更新
         self.api_monitor.addstr(
@@ -149,7 +150,7 @@ class StatusMonitor:
         self.api_monitor.addstr(
             2,
             (self.subwin_width - 1 - len("NG :" + message) - 1),
-            "NG :" + message,
+            "NG-> " + message,
             curses.color_pair(2),
         )
 
