@@ -3,6 +3,7 @@ import time
 from multiprocessing import Array, Manager, freeze_support
 
 from check_thread import CheckRateLimit, CheckTweet
+from db import clear_logged_battle_id
 from select_boss import boss_select_menu
 from status_monitor import StatusMonitor
 from tweet import RequestFaildError, Tweet
@@ -15,13 +16,6 @@ def do_action(key: str, thread: CheckTweet) -> bool:
         return False, False
     elif key == "p":
         return False, True
-    elif key == "d":
-        thread.update_interval(INTERVAL_PATTERN[0])
-    elif key == "s":
-        thread.update_interval(INTERVAL_PATTERN[1])
-    elif key == "a":
-        thread.update_interval(INTERVAL_PATTERN[2])
-    return True, False
 
 
 def stop_running_threads(threads: list):
@@ -74,6 +68,7 @@ def main(stdscr):
                 pass
         monitor.please_wait_view()
         stop_running_threads((check_tweet,))
+        clear_logged_battle_id()
         stdscr.clear()
 
 

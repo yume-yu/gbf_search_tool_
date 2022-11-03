@@ -99,24 +99,29 @@ class CheckTweet(Thread):
         ツイートを検索して、重複のないツイートが見つかったらクリップボードへ挿入する
         """
         try:
-            tweets = self.tweet.search_tweet(self.search_query, self.since_id)
-            battle_id = None
-            for tweet in tweets:
-                _, battle_id = get_rescue_ID(tweet.get("text"))
-                tweet_date = dt.datetime.strptime(
-                    tweet.get("created_at"), self.TWEET_DATETIME_FORMAT
-                ).astimezone(JST)
-                if log_battle_id(battle_id, tweet_date.isoformat()):
-                    # IDのみの指定だと取得漏れが発生しやすくなるので取得開始位置にバッファをもたせる
-                    self.since_id = str(tweet.get("id") - TWEET_ID_BUFFER)
-                    pyperclip.copy(battle_id)
-                    self.update_monitor(newid=battle_id, date=tweet_date)
-                    break
-            self.update_monitor(interval=self.interval)
+            tweets, headers = self.tweet.search_tweet(self.search_query, self.since_id)
+            self.calc_best_interval(headers)
+            self.since_id = str(tweets[-1].get("id"))
+            Thread(target=self.flush_tweets,args=[tweets]).run()
 
         except tm.RequestFaildError as faild:
             self.update_monitor(error=faild)
 
+    def flush_tweets(self, tweets):
+        for tweet in reversed(tweets):
+            _, battle_id = get_rescue_ID(tweet.get("text"))
+            tweet_date = dt.datetime.strptime(
+                tweet.get("created_at"), self.TWEET_DATETIME_FORMAT
+            ).astimezone(JST)
+            if log_battle_id(battle_id, tweet_date.isoformat()):
+                pyperclip.copy(battle_id)
+                self.update_monitor(newid=battle_id, date=tweet_date)
+
+    def calc_best_interval(self, headers: dict):
+        limit_remain = int(headers['x-rate-limit-remaining'])
+        limit_reset_at = dt.datetime.fromtimestamp(float(headers["x-rate-limit-reset"]))
+        best_interval = max(1.8,(limit_reset_at - dt.datetime.now()).seconds / max(1, limit_remain - 5))
+        self.update_monitor(interval=best_interval)
 
 class RefreshStatusMonitor(Thread):
     """

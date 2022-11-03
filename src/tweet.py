@@ -72,6 +72,7 @@ class Tweet:
 
         Returns:
             tweets: 取得したtweet群を含むdict
+            headers: responseのheader
 
         Raises:
             RequestFaildError: 何らかの理由でリクエストに失敗したとき
@@ -91,7 +92,7 @@ class Tweet:
 
         if req.status_code == 200:
             res = json.loads(req.text)
-            return res["statuses"]
+            return res["statuses"], req.headers
         else:
             raise RequestFaildError(req.status_code)
 
@@ -155,9 +156,7 @@ if __name__ == "__main__":
     from datetime import datetime as dt
 
     tw = Tweet()
-    pprint(tw.get_rate_limits().get("application"))
-    pprint(tw.get_rate_limits().get("search"))
-    unixtime = tw.get_rate_limits().get("search").get("/search/tweets").get("reset")
+    tw.search_tweet(keyword='"Lvl 200 Akasha" OR "Lv200 アーカーシャ"', since_id="0")
     print(dt.fromtimestamp(unixtime))
     try:
         raise RequestFaildError(406)

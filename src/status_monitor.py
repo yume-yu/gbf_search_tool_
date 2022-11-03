@@ -62,12 +62,11 @@ class StatusMonitor:
         self.control_explain.bkgd(curses.color_pair(4))
         self.control_explain.addstr(0, 1, "< How to Control >", curses.A_BOLD)
         self.control_explain.addstr(
-            1, 5, "q: quit this / a: slow / s: normal / d: fast / p: return to select"
+            1, 5, "q: quit this / p: return to select"
         )
         self.control_explain.refresh()
 
     def update_request_status(self, interval: int):
-        self.update_rate_limit()
         # API状況更新
         self.api_monitor.addstr(
             2,
@@ -93,11 +92,12 @@ class StatusMonitor:
             ),
         )
         self.api_monitor.addstr(
-            3, (self.subwin_width - 1 - len(str(interval)) - 1), str(interval)
+            3, (self.subwin_width - 1 - len('{:.5g}'.format(interval)) - 1), '{:.5g}'.format(interval)
         )
 
         now = dt.datetime.now().strftime("%H:%M:%S")
         self.api_monitor.addstr(4, self.subwin_width - 1 - len(now) - 1, now)
+        self.update_rate_limit()
         self.api_monitor.refresh()
 
     def update_recent_log(
@@ -156,6 +156,7 @@ class StatusMonitor:
         now = dt.datetime.now().strftime("%H:%M:%S")
         self.api_monitor.addstr(4, self.subwin_width - 1 - len(now) - 1, now)
         self.recent_pad.refresh()
+        self.update_rate_limit()
         self.api_monitor.refresh()
 
     def update_rate_limit(self):
