@@ -101,7 +101,8 @@ class CheckTweet(Thread):
         try:
             tweets, headers = self.tweet.search_tweet(self.search_query, self.since_id)
             self.calc_best_interval(headers)
-            self.since_id = str(tweets[-1].get("id"))
+            if len(tweets) != 0:
+                self.since_id = str(tweets[-1].get("id"))
             Thread(target=self.flush_tweets,args=[tweets]).run()
 
         except tm.RequestFaildError as faild:
